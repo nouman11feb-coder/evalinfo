@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -11,6 +12,9 @@ interface Message {
 }
 
 const ChatInterface = () => {
+  const { toast } = useToast();
+  const webhookUrl = "https://evalinfo1.app.n8n.cloud/webhook-test/b3490c76-c645-43cd-a71b-52ce5898a4fe";
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -42,20 +46,66 @@ const ChatInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      // Send message to webhook
+      console.log("Sending message to webhook:", webhookUrl);
+      
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        mode: "no-cors",
+        body: JSON.stringify({
+          message: currentInput,
+          timestamp: new Date().toISOString(),
+          sender: 'user',
+          chat_id: 'chat_' + Date.now(),
+          triggered_from: window.location.origin,
+        }),
+      });
+
+      console.log("Webhook request sent successfully");
+      
+      // Simulate AI response after webhook call
+      setTimeout(() => {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "Message sent to webhook successfully! Your n8n workflow should have received the data.",
+          sender: 'assistant',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiResponse]);
+        setIsLoading(false);
+        
+        toast({
+          title: "Webhook Triggered",
+          description: "Your message was sent to the n8n webhook successfully.",
+        });
+      }, 1000);
+
+    } catch (error) {
+      console.error("Error sending to webhook:", error);
+      setIsLoading(false);
+      
+      const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm a demo assistant. In a real implementation, this would connect to an AI service to provide intelligent responses.",
+        text: "Sorry, there was an error sending your message to the webhook. Please try again.",
         sender: 'assistant',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1000);
+      setMessages(prev => [...prev, errorResponse]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to send message to webhook. Please check the connection.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
