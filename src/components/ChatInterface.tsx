@@ -126,11 +126,6 @@ const ChatInterface = () => {
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
 
-      toast({
-        title: "Webhook Response",
-        description: "Response received from n8n successfully.",
-      });
-
     } catch (error) {
       console.error("Error sending to webhook:", error);
       setIsLoading(false);
