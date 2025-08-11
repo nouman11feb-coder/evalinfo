@@ -68,15 +68,50 @@ const ChatInterface = () => {
         }),
       });
 
+      const extractText = (payload: any): string => {
+        if (payload == null) return '';
+        if (typeof payload === 'string') return payload;
+        if (typeof payload === 'number' || typeof payload === 'boolean') return String(payload);
+        // Common fields
+        const candidates = [
+          payload.output,
+          payload.text,
+          payload.message,
+          payload.reply,
+          payload.result,
+          payload.response,
+          payload.content,
+          payload.data?.output,
+          payload.data?.text,
+          payload.data?.message,
+        ].filter((v) => typeof v === 'string') as string[];
+        if (candidates.length > 0) return candidates[0];
+
+        // Arrays: find first string or object with known field
+        if (Array.isArray(payload)) {
+          for (const item of payload) {
+            const t = extractText(item);
+            if (t) return t;
+          }
+        }
+
+        // Single-key object with string value
+        const keys = Object.keys(payload);
+        if (keys.length === 1 && typeof (payload as any)[keys[0]] === 'string') {
+          return (payload as any)[keys[0]];
+        }
+
+        return '';
+      };
+
       let replyText = '';
       try {
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
           const data = await response.json();
-          // Try common fields, else stringify
-          replyText = (data.reply || data.message || data.text || JSON.stringify(data));
+          replyText = extractText(data) || 'No content returned from webhook.';
         } else {
-          replyText = await response.text();
+          replyText = (await response.text()) || 'No content returned from webhook.';
         }
       } catch (e) {
         replyText = 'Received response but could not parse content.';
@@ -84,7 +119,7 @@ const ChatInterface = () => {
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: replyText || 'No content returned from webhook.',
+        text: replyText.trim(),
         sender: 'assistant',
         timestamp: new Date(),
       };
