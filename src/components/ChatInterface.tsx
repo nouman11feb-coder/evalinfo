@@ -51,15 +51,14 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     try {
-      // Send message to webhook
       console.log("Sending message to webhook:", webhookUrl);
-      
+
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        mode: "no-cors",
         body: JSON.stringify({
           message: currentInput,
           timestamp: new Date().toISOString(),
@@ -69,24 +68,33 @@ const ChatInterface = () => {
         }),
       });
 
-      console.log("Webhook request sent successfully");
-      
-      // Simulate AI response after webhook call
-      setTimeout(() => {
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: "Message sent to webhook successfully! Your n8n workflow should have received the data.",
-          sender: 'assistant',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, aiResponse]);
-        setIsLoading(false);
-        
-        toast({
-          title: "Webhook Triggered",
-          description: "Your message was sent to the n8n webhook successfully.",
-        });
-      }, 1000);
+      let replyText = '';
+      try {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await response.json();
+          // Try common fields, else stringify
+          replyText = (data.reply || data.message || data.text || JSON.stringify(data));
+        } else {
+          replyText = await response.text();
+        }
+      } catch (e) {
+        replyText = 'Received response but could not parse content.';
+      }
+
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: replyText || 'No content returned from webhook.',
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsLoading(false);
+
+      toast({
+        title: "Webhook Response",
+        description: "Response received from n8n successfully.",
+      });
 
     } catch (error) {
       console.error("Error sending to webhook:", error);
