@@ -13,7 +13,7 @@ interface Message {
 
 const ChatInterface = () => {
   const { toast } = useToast();
-  const webhookUrl = "https://evalinfo1.app.n8n.cloud/webhook-test/b3490c76-c645-43cd-a71b-52ce5898a4fe";
+  const webhookUrl = "https://evalinfo3.app.n8n.cloud/webhook-test/lovable";
   
   const [messages, setMessages] = useState<Message[]>([
     {
