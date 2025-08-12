@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
+import { Send, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -193,35 +193,41 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="space-y-6">
+          <div className="space-y-3">
             {messages.map((message) => (
-              <div
+              <article
                 key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`w-full rounded-xl border border-border ${
+                  message.sender === 'assistant' ? 'bg-muted' : 'bg-background'
+                } p-4`}
               >
-                <div
-                  className={`max-w-3xl rounded-2xl px-4 py-3 ${
-                    message.sender === 'user'
-                      ? 'bg-chat-user text-chat-user-foreground'
-                      : 'bg-chat-assistant text-chat-assistant-foreground border border-border'
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {renderBold(message.text)}
-                  </p>
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>
+                      {message.sender === 'assistant' ? 'AI' : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {renderBold(message.text)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
             {isLoading && (
-              <div className="flex justify-start">
-                <div className="max-w-3xl rounded-2xl px-4 py-3 bg-chat-assistant text-chat-assistant-foreground border border-border">
+              <article className="w-full rounded-xl border border-border bg-muted p-4">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                     <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
-              </div>
+              </article>
             )}
           </div>
           <div ref={messagesEndRef} />
@@ -231,22 +237,25 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       {/* Input */}
       <div className="flex-shrink-0 border-t border-border bg-card">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="relative rounded-xl border border-border bg-background shadow-sm">
+          <div className="relative rounded-full border border-border bg-input shadow-sm">
+            <div className="absolute left-3 bottom-2.5 text-muted-foreground">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </div>
             <Textarea
               ref={textareaRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Send a message..."
+              placeholder="Ask anything"
               disabled={isLoading}
               rows={1}
-              className="max-h-40 resize-none border-0 bg-transparent pr-12 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+              className="max-h-40 resize-none border-0 bg-transparent pl-9 pr-12 py-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
               size="icon"
-              className="absolute right-2 bottom-2 h-8 w-8"
+              className="absolute right-2 bottom-2 h-8 w-8 rounded-full"
               aria-label="Send message"
             >
               <Send className="h-4 w-4" />
