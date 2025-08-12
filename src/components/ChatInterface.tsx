@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Message {
   id: string;
@@ -31,18 +32,36 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+useEffect(() => {
+  scrollToBottom();
+}, [messages]);
 
-  // Simple bold renderer: turns **text** into <strong>text</strong>
-  const renderBold = (text: string): React.ReactNode => {
-    if (!text || !text.includes("**")) return text;
-    const parts = text.split("**");
-    return parts.map((part, idx) =>
-      idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <span key={idx}>{part}</span>
-    );
-  };
+// Update document title for basic SEO
+useEffect(() => {
+  document.title = 'ChatGPT-style AI Assistant';
+}, []);
+
+// Auto-resize textarea like ChatGPT
+const textareaRef = useRef<HTMLTextAreaElement>(null);
+const adjustTextareaHeight = () => {
+  const el = textareaRef.current;
+  if (!el) return;
+  el.style.height = '0px';
+  const newHeight = Math.min(el.scrollHeight, 160);
+  el.style.height = newHeight + 'px';
+};
+useEffect(() => {
+  adjustTextareaHeight();
+}, [inputValue]);
+
+// Simple bold renderer: turns **text** into <strong>text</strong>
+const renderBold = (text: string): React.ReactNode => {
+  if (!text || !text.includes("**")) return text;
+  const parts = text.split("**");
+  return parts.map((part, idx) =>
+    idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <span key={idx}>{part}</span>
+  );
+};
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -155,12 +174,12 @@ const ChatInterface = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSendMessage();
+  }
+};
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -212,28 +231,33 @@ const ChatInterface = () => {
       {/* Input */}
       <div className="flex-shrink-0 border-t border-border bg-card">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex-1 relative">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                disabled={isLoading}
-                className="pr-12 bg-input border-border text-foreground placeholder:text-muted-foreground"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="relative rounded-xl border border-border bg-background shadow-sm">
+            <Textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Send a message..."
+              disabled={isLoading}
+              rows={1}
+              className="max-h-40 resize-none border-0 bg-transparent pr-12 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isLoading}
+              size="icon"
+              className="absolute right-2 bottom-2 h-8 w-8"
+              aria-label="Send message"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Press Enter to send • Shift + Enter for new line
+          </p>
         </div>
       </div>
+
     </div>
   );
 };
