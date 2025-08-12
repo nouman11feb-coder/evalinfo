@@ -35,6 +35,15 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Simple bold renderer: turns **text** into <strong>text</strong>
+  const renderBold = (text: string): React.ReactNode => {
+    if (!text || !text.includes("**")) return text;
+    const parts = text.split("**");
+    return parts.map((part, idx) =>
+      idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <span key={idx}>{part}</span>
+    );
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -179,7 +188,7 @@ const ChatInterface = () => {
                   }`}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.text}
+                    {renderBold(message.text)}
                   </p>
                 </div>
               </div>
