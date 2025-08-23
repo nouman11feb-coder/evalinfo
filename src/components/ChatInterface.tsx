@@ -135,13 +135,21 @@ const renderBold = (text: string): React.ReactNode => {
       let replyText = '';
       try {
         const contentType = response.headers.get('content-type') || '';
+        console.log("Response status:", response.status);
+        console.log("Response content-type:", contentType);
+        
         if (contentType.includes('application/json')) {
           const data = await response.json();
+          console.log("JSON response data:", data);
           replyText = extractText(data) || 'No content returned from webhook.';
         } else {
-          replyText = (await response.text()) || 'No content returned from webhook.';
+          const textData = await response.text();
+          console.log("Text response data:", textData);
+          replyText = textData || 'No content returned from webhook.';
         }
+        console.log("Final replyText:", replyText);
       } catch (e) {
+        console.error("Error parsing response:", e);
         replyText = 'Received response but could not parse content.';
       }
 
