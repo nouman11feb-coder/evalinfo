@@ -14,7 +14,7 @@ interface Message {
 
 const ChatInterface = () => {
   const { toast } = useToast();
-  const webhookUrl = "https://evalinfo3.app.n8n.cloud/webhook/lovable";
+  const webhookUrl = "https://n8n.evalinfo.com/webhook/chat";
   
   const [messages, setMessages] = useState<Message[]>([
     {
