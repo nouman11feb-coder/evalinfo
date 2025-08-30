@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Send, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import ChatHistory from './chat/ChatHistory';
+import ChatMessage from './chat/ChatMessage';
+import ChatInput from './chat/ChatInput';
+import LoadingMessage from './chat/LoadingMessage';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   id: string;
@@ -12,21 +13,40 @@ interface Message {
   timestamp: Date;
 }
 
+interface Chat {
+  id: string;
+  name: string;
+  messages: Message[];
+  lastMessage: string;
+  timestamp: Date;
+}
+
 const ChatInterface = () => {
   const { toast } = useToast();
-  const webhookUrl = "http://n8n3.intelliscan.online:5680/webhook/intelliscan";
+  const webhookUrl = "https://n8n3.intelliscan.online/webhook/intelliscan";
   
-  const [messages, setMessages] = useState<Message[]>([
+  const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
-      text: "How I can help you today? I'm a smart genius assistant",
-      sender: 'assistant',
+      name: 'Chat 1',
+      messages: [
+        {
+          id: '1',
+          text: "How I can help you today? I'm a smart genius assistant",
+          sender: 'assistant',
+          timestamp: new Date(),
+        },
+      ],
+      lastMessage: "How I can help you today? I'm a smart genius assistant",
       timestamp: new Date(),
     },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [activeChat, setActiveChat] = useState('1');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const currentChat = chats.find(chat => chat.id === activeChat);
+  const messages = currentChat?.messages || [];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,29 +61,32 @@ useEffect(() => {
   document.title = "intelliscan";
 }, []);
 
-// Auto-resize textarea like ChatGPT
-const textareaRef = useRef<HTMLTextAreaElement>(null);
-const adjustTextareaHeight = () => {
-  const el = textareaRef.current;
-  if (!el) return;
-  el.style.height = '0px';
-  const newHeight = Math.min(el.scrollHeight, 160);
-  el.style.height = newHeight + 'px';
-};
+// Load chats from localStorage
 useEffect(() => {
-  adjustTextareaHeight();
-}, [inputValue]);
+  const savedChats = localStorage.getItem('intelliscan-chats');
+  if (savedChats) {
+    try {
+      const parsed = JSON.parse(savedChats);
+      setChats(parsed.map((chat: any) => ({
+        ...chat,
+        timestamp: new Date(chat.timestamp),
+        messages: chat.messages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }))
+      })));
+    } catch (error) {
+      console.error('Failed to load chats:', error);
+    }
+  }
+}, []);
 
-// Simple bold renderer: turns **text** into <strong>text</strong>
-const renderBold = (text: string): React.ReactNode => {
-  if (!text || !text.includes("**")) return text;
-  const parts = text.split("**");
-  return parts.map((part, idx) =>
-    idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <span key={idx}>{part}</span>
-  );
-};
+// Save chats to localStorage
+useEffect(() => {
+  localStorage.setItem('intelliscan-chats', JSON.stringify(chats));
+}, [chats]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (inputValue: string) => {
     if (!inputValue.trim() || isLoading) return;
 
     const newMessage: Message = {
@@ -73,9 +96,18 @@ const renderBold = (text: string): React.ReactNode => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    const currentInput = inputValue;
-    setInputValue('');
+    // Update messages in the current chat
+    setChats(prev => prev.map(chat => 
+      chat.id === activeChat 
+        ? { 
+            ...chat, 
+            messages: [...chat.messages, newMessage],
+            lastMessage: inputValue,
+            timestamp: new Date()
+          }
+        : chat
+    ));
+
     setIsLoading(true);
 
     try {
@@ -88,10 +120,10 @@ const renderBold = (text: string): React.ReactNode => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          message: currentInput,
+          message: inputValue,
           timestamp: new Date().toISOString(),
           sender: 'user',
-          chat_id: 'chat_' + Date.now(),
+          chat_id: activeChat,
           triggered_from: window.location.origin,
         }),
       });
@@ -159,7 +191,19 @@ const renderBold = (text: string): React.ReactNode => {
         sender: 'assistant',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
+      
+      // Update messages in the current chat
+      setChats(prev => prev.map(chat => 
+        chat.id === activeChat 
+          ? { 
+              ...chat, 
+              messages: [...chat.messages, aiResponse],
+              lastMessage: replyText.trim().substring(0, 50) + (replyText.length > 50 ? '...' : ''),
+              timestamp: new Date()
+            }
+          : chat
+      ));
+      
       setIsLoading(false);
 
     } catch (error) {
@@ -172,7 +216,18 @@ const renderBold = (text: string): React.ReactNode => {
         sender: 'assistant',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorResponse]);
+      
+      // Update messages in the current chat
+      setChats(prev => prev.map(chat => 
+        chat.id === activeChat 
+          ? { 
+              ...chat, 
+              messages: [...chat.messages, errorResponse],
+              lastMessage: "Error occurred",
+              timestamp: new Date()
+            }
+          : chat
+      ));
       
       toast({
         title: "Error",
@@ -182,99 +237,76 @@ const renderBold = (text: string): React.ReactNode => {
     }
   };
 
-const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSendMessage();
+const handleNewChat = () => {
+  const chatNumber = chats.length + 1;
+  const newChat: Chat = {
+    id: Date.now().toString(),
+    name: `Chat ${chatNumber}`,
+    messages: [
+      {
+        id: Date.now().toString(),
+        text: "How I can help you today? I'm a smart genius assistant",
+        sender: 'assistant',
+        timestamp: new Date(),
+      },
+    ],
+    lastMessage: "How I can help you today? I'm a smart genius assistant",
+    timestamp: new Date(),
+  };
+  
+  setChats(prev => [...prev, newChat]);
+  setActiveChat(newChat.id);
+};
+
+const handleSelectChat = (chatId: string) => {
+  setActiveChat(chatId);
+};
+
+const handleDeleteChat = (chatId: string) => {
+  if (chats.length === 1) return; // Don't delete the last chat
+  
+  setChats(prev => prev.filter(chat => chat.id !== chatId));
+  
+  if (activeChat === chatId) {
+    const remainingChats = chats.filter(chat => chat.id !== chatId);
+    setActiveChat(remainingChats[0]?.id || '');
   }
 };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
-      <div className="flex-shrink-0 border-b border-border bg-card">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold text-foreground">intelliscan</h1>
-        </div>
-      </div>
+    <div className="flex h-screen bg-background">
+      {/* Chat History Sidebar */}
+      <ChatHistory
+        chats={chats.map(chat => ({
+          id: chat.id,
+          name: chat.name,
+          lastMessage: chat.lastMessage,
+          timestamp: chat.timestamp
+        }))}
+        activeChat={activeChat}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
+      />
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="space-y-3">
-            {messages.map((message) => (
-              <article
-                key={message.id}
-                className={`w-full rounded-xl border border-border ${
-                  message.sender === 'assistant' ? 'bg-muted' : 'bg-background'
-                } p-4`}
-              >
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>
-                      {message.sender === 'assistant' ? 'AI' : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {renderBold(message.text)}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            ))}
-            {isLoading && (
-              <article className="w-full rounded-xl border border-border bg-muted p-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>AI</AvatarFallback>
-                  </Avatar>
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </article>
-            )}
-          </div>
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="flex-shrink-0 border-t border-border bg-card">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="relative rounded-full border border-border bg-input shadow-sm">
-            <div className="absolute left-3 bottom-2.5 text-muted-foreground">
-              <Plus className="h-4 w-4" aria-hidden="true" />
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Messages */}
+        <ScrollArea className="flex-1">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+              {isLoading && <LoadingMessage />}
             </div>
-            <Textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything"
-              disabled={isLoading}
-              rows={1}
-              className="max-h-40 resize-none border-0 bg-transparent pl-9 pr-12 py-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              size="icon"
-              className="absolute right-2 bottom-2 h-8 w-8 rounded-full"
-              aria-label="Send message"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            <div ref={messagesEndRef} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Press Enter to send • Shift + Enter for new line
-          </p>
-        </div>
-      </div>
+        </ScrollArea>
 
+        {/* Input */}
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      </div>
     </div>
   );
 };
