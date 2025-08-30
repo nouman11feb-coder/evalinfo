@@ -14,7 +14,7 @@ interface Message {
 
 const ChatInterface = () => {
   const { toast } = useToast();
-  const webhookUrl = "http://chat.intelliscan.online:5680/webhook/7b312b28-98f3-4d95-b696-203f37c338e4";
+  const webhookUrl = "http://n8n3.intelliscan.online:5680/webhook/intelliscan";
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -38,7 +38,7 @@ useEffect(() => {
 
 // Update document title for basic SEO
 useEffect(() => {
-  document.title = 'ChatGPT-style AI Assistant';
+  document.title = "intelliscan";
 }, []);
 
 // Auto-resize textarea like ChatGPT
@@ -194,7 +194,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       {/* Header */}
       <div className="flex-shrink-0 border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold text-foreground">AI Assistant</h1>
+          <h1 className="text-xl font-semibold text-foreground">intelliscan</h1>
         </div>
       </div>
 
