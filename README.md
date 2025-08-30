@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# Welcome to your intelliscan Project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/f7ba5fb6-4358-4096-b1b0-9ef98b175572
+
 
 ## How can I edit this code?
 
@@ -10,7 +10,6 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f7ba5fb6-4358-4096-b1b0-9ef98b175572) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
