@@ -6,6 +6,23 @@
 All colors MUST be HSL.
 */
 
+/* Custom properties for enhanced design */
+:root {
+  /* Beautiful gradients using semantic colors */
+  --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-foreground)));
+  --gradient-chat: linear-gradient(135deg, hsl(var(--chat-user)), hsl(var(--chat-user) / 0.8));
+  --gradient-sidebar: linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(var(--sidebar-accent)));
+  
+  /* Elegant shadows */
+  --shadow-elegant: 0 10px 30px -10px hsl(var(--foreground) / 0.1);
+  --shadow-glow: 0 0 20px hsl(var(--primary) / 0.2);
+  --shadow-chat: 0 4px 12px hsl(var(--foreground) / 0.05);
+  
+  /* Smooth transitions */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @layer base {
   :root {
     --background: 212 15% 8%;
@@ -106,5 +123,49 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility classes for enhanced design */
+@layer components {
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+  
+  .chat-bubble-user {
+    background: var(--gradient-chat);
+    box-shadow: var(--shadow-chat);
+    transition: var(--transition-smooth);
+  }
+  
+  .chat-bubble-assistant {
+    background: hsl(var(--chat-assistant));
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: var(--shadow-chat);
+    transition: var(--transition-smooth);
+  }
+  
+  .sidebar-enhanced {
+    background: var(--gradient-sidebar);
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .hover-scale {
+    transition: var(--transition-fast);
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  .input-enhanced {
+    box-shadow: var(--shadow-chat);
+    transition: var(--transition-smooth);
+  }
+  
+  .input-enhanced:focus-within {
+    box-shadow: var(--shadow-glow);
   }
 }

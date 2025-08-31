@@ -39,11 +39,11 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   };
 
   return (
-    <div className="flex-shrink-0 border-t border-border bg-card">
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="relative rounded-xl border border-border bg-input shadow-sm">
-          <div className="absolute left-3 bottom-3 text-muted-foreground">
-            <Plus className="h-4 w-4" aria-hidden="true" />
+    <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm">
+      <div className="max-w-4xl mx-auto px-6 py-6">
+        <div className="relative rounded-2xl border border-border input-enhanced bg-input/50 backdrop-blur-sm">
+          <div className="absolute left-4 bottom-4 text-muted-foreground">
+            <Plus className="h-5 w-5" aria-hidden="true" />
           </div>
           <Textarea
             ref={textareaRef}
@@ -53,20 +53,20 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             placeholder="Ask anything..."
             disabled={isLoading}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-10 pr-12 py-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="max-h-40 resize-none border-0 bg-transparent pl-12 pr-14 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
           />
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
-            className="absolute right-2 bottom-2 h-8 w-8 rounded-lg bg-primary hover:bg-primary/90"
+            className="absolute right-3 bottom-3 h-9 w-9 rounded-xl bg-primary hover:bg-primary/90 shadow-lg hover-scale disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground text-center">
-          Press Enter to send • Shift + Enter for new line
+        <p className="mt-3 text-xs text-muted-foreground text-center">
+          Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Shift + Enter</kbd> for new line
         </p>
       </div>
     </div>
