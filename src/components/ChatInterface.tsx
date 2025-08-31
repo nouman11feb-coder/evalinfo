@@ -43,6 +43,7 @@ const ChatInterface = () => {
   ]);
   const [activeChat, setActiveChat] = useState('1');
   const [isLoading, setIsLoading] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats.find(chat => chat.id === activeChat);
@@ -273,6 +274,10 @@ const handleDeleteChat = (chatId: string) => {
   }
 };
 
+const handleToggleSidebar = () => {
+  setSidebarCollapsed(!sidebarCollapsed);
+};
+
   return (
     <div className="flex h-screen bg-background">
       {/* Chat History Sidebar */}
@@ -287,10 +292,32 @@ const handleDeleteChat = (chatId: string) => {
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
+        {/* Header with User Profile */}
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {currentChat?.name || 'Chat'}
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2 rounded-xl bg-muted/50 border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Authentication required - Connect to Supabase to enable login/logout
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         {/* Messages */}
         <ScrollArea className="flex-1">
           <div className="max-w-4xl mx-auto px-4 py-6">
