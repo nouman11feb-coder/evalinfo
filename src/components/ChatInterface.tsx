@@ -44,6 +44,7 @@ const ChatInterface = () => {
   const [activeChat, setActiveChat] = useState('1');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats.find(chat => chat.id === activeChat);
@@ -278,37 +279,67 @@ const handleToggleSidebar = () => {
   setSidebarCollapsed(!sidebarCollapsed);
 };
 
+const handleToggleMobileMenu = () => {
+  setMobileMenuOpen(!mobileMenuOpen);
+};
+
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
+      {/* Mobile overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="mobile-sidebar-overlay"
+          onClick={handleToggleMobileMenu}
+        />
+      )}
+      
       {/* Chat History Sidebar */}
-      <ChatHistory
-        chats={chats.map(chat => ({
-          id: chat.id,
-          name: chat.name,
-          lastMessage: chat.lastMessage,
-          timestamp: chat.timestamp
-        }))}
-        activeChat={activeChat}
-        onSelectChat={handleSelectChat}
-        onNewChat={handleNewChat}
-        onDeleteChat={handleDeleteChat}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={handleToggleSidebar}
-      />
+      <div className={`mobile-sidebar ${!mobileMenuOpen ? 'mobile-sidebar-hidden' : ''}`}>
+        <ChatHistory
+          chats={chats.map(chat => ({
+            id: chat.id,
+            name: chat.name,
+            lastMessage: chat.lastMessage,
+            timestamp: chat.timestamp
+          }))}
+          activeChat={activeChat}
+          onSelectChat={(chatId) => {
+            handleSelectChat(chatId);
+            setMobileMenuOpen(false); // Close mobile menu on chat select
+          }}
+          onNewChat={() => {
+            handleNewChat();
+            setMobileMenuOpen(false); // Close mobile menu on new chat
+          }}
+          onDeleteChat={handleDeleteChat}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
+          onToggleMobileMenu={handleToggleMobileMenu}
+        />
+      </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header with User Profile */}
         <div className="border-b border-border bg-card/50 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="max-w-4xl mx-auto mobile-padding">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleToggleMobileMenu}
+                  className="mobile-touch-target flex items-center justify-center rounded-lg hover:bg-muted/50 md:hidden"
+                  aria-label="Toggle menu"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
                 <h2 className="text-lg font-semibold text-foreground">
                   {currentChat?.name || 'Chat'}
                 </h2>
               </div>
               <div className="flex items-center gap-3">
-                <div className="px-4 py-2 rounded-xl bg-muted/50 border border-border">
+                <div className="hidden sm:block px-4 py-2 rounded-xl bg-muted/50 border border-border">
                   <p className="text-sm text-muted-foreground">
                     Authentication required - Connect to Supabase to enable login/logout
                   </p>
@@ -320,8 +351,8 @@ const handleToggleSidebar = () => {
         
         {/* Messages */}
         <ScrollArea className="flex-1">
-          <div className="max-w-4xl mx-auto px-4 py-6">
-            <div className="space-y-4">
+          <div className="max-w-4xl mx-auto px-3 py-4 md:px-4 md:py-6">
+            <div className="space-y-3 md:space-y-4">
               {messages.map((message) => (
                 <ChatMessage key={message.id} message={message} />
               ))}

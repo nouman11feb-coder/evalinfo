@@ -23,14 +23,14 @@ const renderBold = (text: string): React.ReactNode => {
 const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <article
-      className={`w-full rounded-2xl border p-5 hover-scale ${
+      className={`w-full rounded-2xl border p-4 md:p-5 hover-scale ${
         message.sender === 'assistant' 
           ? 'chat-bubble-assistant text-chat-assistant-foreground' 
           : 'chat-bubble-user text-chat-user-foreground border-none'
       }`}
     >
-      <div className="flex items-start gap-4">
-        <Avatar className="h-9 w-9 flex-shrink-0 shadow-sm">
+      <div className="flex items-start gap-3 md:gap-4">
+        <Avatar className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0 shadow-sm">
           <AvatarFallback className={
             message.sender === 'assistant' 
               ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' 
@@ -40,7 +40,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="mobile-text leading-relaxed whitespace-pre-wrap">
             {renderBold(message.text)}
           </p>
         </div>

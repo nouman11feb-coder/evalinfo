@@ -168,4 +168,29 @@ All colors MUST be HSL.
   .input-enhanced:focus-within {
     box-shadow: var(--shadow-glow);
   }
+
+  /* Mobile-first responsive utilities */
+  .mobile-sidebar-overlay {
+    @apply fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden;
+  }
+  
+  .mobile-sidebar {
+    @apply fixed left-0 top-0 z-50 h-full w-80 transform transition-transform duration-300 md:relative md:transform-none;
+  }
+  
+  .mobile-sidebar-hidden {
+    @apply -translate-x-full md:translate-x-0;
+  }
+  
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .mobile-padding {
+    @apply px-4 py-3 md:px-6 md:py-4;
+  }
+  
+  .mobile-text {
+    @apply text-base md:text-sm;
+  }
 }

@@ -2,9 +2,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const LoadingMessage = () => {
   return (
-    <article className="w-full rounded-2xl border border-border chat-bubble-assistant text-chat-assistant-foreground p-5">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-9 w-9 flex-shrink-0 shadow-sm">
+    <article className="w-full rounded-2xl border border-border chat-bubble-assistant text-chat-assistant-foreground p-4 md:p-5">
+      <div className="flex items-center gap-3 md:gap-4">
+        <Avatar className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0 shadow-sm">
           <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground font-semibold">
             AI
           </AvatarFallback>
