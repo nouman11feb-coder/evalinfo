@@ -16,6 +16,12 @@ interface Message {
     filename: string;
     size: number;
   };
+  document?: {
+    url: string;
+    filename: string;
+    size: number;
+    mimeType: string;
+  };
 }
 
 interface Chat {
@@ -93,15 +99,16 @@ useEffect(() => {
   localStorage.setItem('intelliscan-chats', JSON.stringify(chats));
 }, [chats]);
 
-  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }) => {
-    if ((!inputValue.trim() && !image) || isLoading) return;
+  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }, document?: { url: string; filename: string; size: number; mimeType: string }) => {
+    if ((!inputValue.trim() && !image && !document) || isLoading) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue || (image ? `Sent an image: ${image.filename}` : ''),
+      text: inputValue || (image ? `Sent an image: ${image.filename}` : '') || (document ? `Sent a document: ${document.filename}` : ''),
       sender: 'user',
       timestamp: new Date(),
       ...(image && { image }),
+      ...(document && { document }),
     };
 
     // Update messages in the current chat
@@ -110,7 +117,7 @@ useEffect(() => {
         ? { 
             ...chat, 
             messages: [...chat.messages, newMessage],
-            lastMessage: inputValue || (image ? `📷 ${image.filename}` : ''),
+            lastMessage: inputValue || (image ? `📷 ${image.filename}` : '') || (document ? `📎 ${document.filename}` : ''),
             timestamp: new Date()
           }
         : chat
@@ -128,7 +135,7 @@ useEffect(() => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          message: inputValue || (image ? `Image: ${image.filename}` : ''),
+          message: inputValue || (image ? `Image: ${image.filename}` : '') || (document ? `Document: ${document.filename}` : ''),
           timestamp: new Date().toISOString(),
           sender: 'user',
           chat_id: activeChat,
@@ -138,6 +145,14 @@ useEffect(() => {
               url: image.url,
               filename: image.filename,
               size: image.size
+            }
+          }),
+          ...(document && { 
+            document: {
+              url: document.url,
+              filename: document.filename,
+              size: document.size,
+              mimeType: document.mimeType
             }
           }),
         }),

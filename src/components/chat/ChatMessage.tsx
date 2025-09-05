@@ -1,4 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Download, ExternalLink } from 'lucide-react';
+import { getDocumentIcon } from '@/services/documentUpload';
 
 interface Message {
   id: string;
@@ -9,6 +12,12 @@ interface Message {
     url: string;
     filename: string;
     size: number;
+  };
+  document?: {
+    url: string;
+    filename: string;
+    size: number;
+    mimeType: string;
   };
 }
 
@@ -54,8 +63,50 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                 onClick={() => window.open(message.image?.url, '_blank')}
               />
               <p className="mt-2 text-xs text-muted-foreground">
-                {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
+                📷 {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
               </p>
+            </div>
+          )}
+          {message.document && (
+            <div className="mb-3 p-4 rounded-xl border border-border bg-card/30 hover-scale">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center text-xl flex-shrink-0">
+                  {getDocumentIcon(message.document.mimeType)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {message.document.filename}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {(message.document.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => window.open(message.document?.url, '_blank')}
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 rounded-lg hover:bg-muted/50"
+                    aria-label="View document"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = message.document?.url || '';
+                      link.download = message.document?.filename || 'document';
+                      link.click();
+                    }}
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 rounded-lg hover:bg-muted/50"
+                    aria-label="Download document"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
           {message.text && (
