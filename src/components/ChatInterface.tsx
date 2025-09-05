@@ -380,7 +380,7 @@ useEffect(() => {
 }, [isEditingTitle]);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen lovable-background overflow-hidden">
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div 

@@ -8,12 +8,14 @@ All colors MUST be HSL.
 
 /* Custom properties for enhanced design */
 :root {
-  /* Beautiful gradients using semantic colors */
+/* Beautiful gradients using semantic colors */
   --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.9));
   --gradient-chat-user: linear-gradient(135deg, hsl(var(--chat-user)), hsl(var(--chat-user) / 0.9));
   --gradient-chat-assistant: linear-gradient(135deg, hsl(var(--chat-assistant)), hsl(var(--chat-assistant) / 0.95));
-  --gradient-input: linear-gradient(135deg, hsl(var(--input)), hsl(var(--input) / 0.8));
+  --gradient-input: linear-gradient(135deg, hsl(var(--card) / 0.8), hsl(var(--card) / 0.6));
   --gradient-sidebar: linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(var(--sidebar-accent)));
+  --gradient-lovable: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --gradient-background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #ffecd2 100%);
   
   /* Elegant shadows with color variations */
   --shadow-elegant: 0 20px 40px -12px hsl(var(--foreground) / 0.08);
@@ -178,15 +180,34 @@ All colors MUST be HSL.
   }
   
   .input-enhanced {
-    background: var(--gradient-input);
-    box-shadow: var(--shadow-input);
-    border: 1px solid hsl(var(--border) / 0.2);
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: var(--transition-smooth);
   }
   
   .input-enhanced:focus-within {
-    box-shadow: var(--shadow-input), var(--shadow-glow);
-    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 20px rgba(103, 126, 234, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .lovable-background {
+    background: var(--gradient-background);
+    min-height: 100vh;
+  }
+
+  .suggestion-chip {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition-smooth);
+  }
+
+  .suggestion-chip:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
   }
   
   .button-primary {

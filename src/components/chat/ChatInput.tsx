@@ -214,8 +214,8 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   };
 
   return (
-    <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm">
-      <div className="max-w-4xl mx-auto mobile-padding">
+    <div className="flex-shrink-0 bg-transparent">
+      <div className="max-w-3xl mx-auto mobile-padding space-y-4">
         {/* File Previews */}
         {(selectedImage || selectedDocument || selectedVoice) && (
           <div className="mb-3 space-y-3">
@@ -307,45 +307,53 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           </div>
         )}
 
-        <div className="relative rounded-2xl input-enhanced backdrop-blur-sm overflow-hidden">
-          <div className="absolute left-3 bottom-3 flex items-center gap-1.5">
-            <div 
-              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
-                selectedImage ? 'bg-primary/10 border-primary/30' : ''
-              }`}
+        {/* Suggested prompts */}
+        {!inputValue && !selectedImage && !selectedDocument && !selectedVoice && (
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            {[
+              "PDF viewer",
+              "Fitness tracker", 
+              "SaaS landing page",
+              "E-commerce product page"
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => setInputValue(`Create a ${suggestion.toLowerCase()}`)}
+                className="suggestion-chip px-4 py-2 rounded-full text-white/90 text-sm font-medium hover:text-white"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="relative rounded-3xl input-enhanced overflow-hidden max-w-2xl mx-auto">
+          <div className="absolute left-4 bottom-4 flex items-center gap-2">
+            <button
+              className="suggestion-chip px-3 py-1.5 rounded-full text-white/80 text-sm font-medium hover:text-white flex items-center gap-2"
               onClick={handleImageButtonClick}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload image"
             >
-              <Image className={`h-4 w-4 ${selectedImage ? 'text-primary' : 'text-muted-foreground'}`} />
-            </div>
-            <div 
-              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
-                selectedDocument ? 'bg-primary/10 border-primary/30' : ''
-              }`}
+              <Image className="h-4 w-4" />
+              Attach
+            </button>
+            <button
+              className="suggestion-chip px-3 py-1.5 rounded-full text-white/80 text-sm font-medium hover:text-white flex items-center gap-2"
               onClick={handleDocumentButtonClick}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload document"
             >
-              <FileText className={`h-4 w-4 ${selectedDocument ? 'text-primary' : 'text-muted-foreground'}`} />
-            </div>
-            <div 
-              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
+              <FileText className="h-4 w-4" />
+              Document
+            </button>
+            <button
+              className={`suggestion-chip px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 ${
                 isRecording 
-                  ? 'bg-red-500/20 border-red-500/40 text-red-500' 
-                  : selectedVoice 
-                    ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'text-muted-foreground'
+                  ? 'text-red-400 hover:text-red-300' 
+                  : 'text-white/80 hover:text-white'
               }`}
               onClick={isRecording ? stopRecording : startRecording}
-              role="button"
-              tabIndex={0}
-              aria-label={isRecording ? "Stop recording" : "Record voice message"}
             >
               {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </div>
+              {isRecording ? 'Stop' : 'Voice'}
+            </button>
           </div>
           <Textarea
             ref={textareaRef}
@@ -357,24 +365,24 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                 ? `Recording... ${formatTime(recordingTime)}` 
                 : (selectedImage || selectedDocument || selectedVoice) 
                   ? "Add a message with your file..." 
-                  : "Ask anything..."
+                  : "Ask Intelliscan to create a web app that..."
             }
             disabled={isLoading || isUploading || isRecording}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text"
+            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-5 text-white placeholder:text-white/60 focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
           />
           <div 
-            className={`absolute right-3 bottom-3 h-10 w-10 rounded-2xl button-primary cursor-pointer flex items-center justify-center mobile-touch-target ${
+            className={`absolute right-4 bottom-4 h-10 w-10 rounded-full bg-white hover:bg-white/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
               ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
                 ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:shadow-lg'
+                : 'hover:shadow-lg hover:scale-105'
             }`}
             onClick={handleSend}
             role="button"
             tabIndex={0}
             aria-label="Send message"
           >
-            <Send className="h-5 w-5 text-primary-foreground" />
+            <Send className="h-5 w-5 text-gray-800" />
           </div>
         </div>
 
@@ -396,8 +404,8 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           aria-label="Select document file"
         />
 
-        <p className="mt-3 text-xs text-muted-foreground text-center hidden md:block">
-          Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Shift + Enter</kbd> for new line
+        <p className="mt-4 text-xs text-white/60 text-center hidden md:block">
+          Press <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Shift + Enter</kbd> for new line
         </p>
       </div>
     </div>
