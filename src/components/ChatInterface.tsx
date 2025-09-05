@@ -23,7 +23,7 @@ interface Chat {
 
 const ChatInterface = () => {
   const { toast } = useToast();
-  const webhookUrl = "https://n8n3.intelliscan.online/webhook/intelliscan";
+  const webhookUrl = "http://n8n13.intelliscan.online:5687/webhook/b96886e7-b9e0-419c-a59f-59306a89db88";
   
   const [chats, setChats] = useState<Chat[]>([
     {
