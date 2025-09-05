@@ -307,42 +307,45 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           </div>
         )}
 
-        <div className="relative rounded-2xl border border-border input-enhanced bg-input/50 backdrop-blur-sm">
-          <div className="absolute left-4 bottom-4 flex items-center gap-2">
-            <Button
+        <div className="relative rounded-2xl input-enhanced backdrop-blur-sm overflow-hidden">
+          <div className="absolute left-3 bottom-3 flex items-center gap-1.5">
+            <div 
+              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
+                selectedImage ? 'bg-primary/10 border-primary/30' : ''
+              }`}
               onClick={handleImageButtonClick}
-              disabled={isLoading || isUploading}
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground mobile-touch-target"
+              role="button"
+              tabIndex={0}
               aria-label="Upload image"
             >
-              <Image className="h-4 w-4" />
-            </Button>
-            <Button
+              <Image className={`h-4 w-4 ${selectedImage ? 'text-primary' : 'text-muted-foreground'}`} />
+            </div>
+            <div 
+              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
+                selectedDocument ? 'bg-primary/10 border-primary/30' : ''
+              }`}
               onClick={handleDocumentButtonClick}
-              disabled={isLoading || isUploading}
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground mobile-touch-target"
+              role="button"
+              tabIndex={0}
               aria-label="Upload document"
             >
-              <FileText className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isLoading || isUploading}
-              size="icon"
-              variant="ghost"
-              className={`h-8 w-8 rounded-lg mobile-touch-target transition-colors ${
+              <FileText className={`h-4 w-4 ${selectedDocument ? 'text-primary' : 'text-muted-foreground'}`} />
+            </div>
+            <div 
+              className={`icon-container rounded-xl p-2 cursor-pointer mobile-touch-target ${
                 isRecording 
-                  ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' 
-                  : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                  ? 'bg-red-500/20 border-red-500/40 text-red-500' 
+                  : selectedVoice 
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'text-muted-foreground'
               }`}
+              onClick={isRecording ? stopRecording : startRecording}
+              role="button"
+              tabIndex={0}
               aria-label={isRecording ? "Stop recording" : "Record voice message"}
             >
               {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
+            </div>
           </div>
           <Textarea
             ref={textareaRef}
@@ -358,17 +361,21 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             }
             disabled={isLoading || isUploading || isRecording}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-28 pr-14 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text"
+            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text"
           />
-          <Button
+          <div 
+            className={`absolute right-3 bottom-3 h-10 w-10 rounded-2xl button-primary cursor-pointer flex items-center justify-center mobile-touch-target ${
+              ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:shadow-lg'
+            }`}
             onClick={handleSend}
-            disabled={(!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording}
-            size="icon"
-            className="absolute right-3 bottom-3 h-9 w-9 rounded-xl bg-primary hover:bg-primary/90 shadow-lg hover-scale disabled:opacity-50 disabled:cursor-not-allowed mobile-touch-target"
+            role="button"
+            tabIndex={0}
             aria-label="Send message"
           >
-            <Send className="h-4 w-4" />
-          </Button>
+            <Send className="h-5 w-5 text-primary-foreground" />
+          </div>
         </div>
 
         {/* Hidden file inputs */}
