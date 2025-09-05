@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Check, X, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from './ThemeToggle';
 
 interface Message {
   id: string;
@@ -483,6 +484,7 @@ useEffect(() => {
                     Authentication required - Connect to Supabase to enable login/logout
                   </p>
                 </div>
+                <ThemeToggle />
               </div>
             </div>
           </div>
