@@ -216,97 +216,6 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   return (
     <div className="flex-shrink-0 bg-transparent">
       <div className="max-w-3xl mx-auto mobile-padding space-y-4">
-        {/* File Previews */}
-        {(selectedImage || selectedDocument || selectedVoice) && (
-          <div className="mb-3 space-y-3">
-            {selectedImage && (
-              <div className="p-3 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img 
-                      src={selectedImage.url} 
-                      alt={selectedImage.filename}
-                      className="w-16 h-16 object-cover rounded-lg border border-border"
-                    />
-                    <Button
-                      onClick={handleRemoveImage}
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      📷 {selectedImage.filename}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {selectedDocument && (
-              <div className="p-3 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-lg border border-border bg-muted/50 flex items-center justify-center text-2xl">
-                      {getDocumentIcon(selectedDocument.mimeType)}
-                    </div>
-                    <Button
-                      onClick={handleRemoveDocument}
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {selectedDocument.filename}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedDocument.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {selectedVoice && (
-              <div className="p-3 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-lg border border-border bg-primary/10 flex items-center justify-center text-2xl">
-                      🎤
-                    </div>
-                    <Button
-                      onClick={handleRemoveVoice}
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      🎤 Voice message ({formatTime(selectedVoice.duration)})
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(selectedVoice.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Suggested prompts */}
         {!inputValue && !selectedImage && !selectedDocument && !selectedVoice && (
           <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -403,6 +312,97 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           className="hidden"
           aria-label="Select document file"
         />
+
+        {/* File Previews */}
+        {(selectedImage || selectedDocument || selectedVoice) && (
+          <div className="mt-4 space-y-3">
+            {selectedImage && (
+              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img 
+                      src={selectedImage.url} 
+                      alt={selectedImage.filename}
+                      className="w-16 h-16 object-cover rounded-lg border border-white/20"
+                    />
+                    <Button
+                      onClick={handleRemoveImage}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      📷 {selectedImage.filename}
+                    </p>
+                    <p className="text-xs text-white/60">
+                      {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {selectedDocument && (
+              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-2xl">
+                      {getDocumentIcon(selectedDocument.mimeType)}
+                    </div>
+                    <Button
+                      onClick={handleRemoveDocument}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {selectedDocument.filename}
+                    </p>
+                    <p className="text-xs text-white/60">
+                      {(selectedDocument.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {selectedVoice && (
+              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-2xl">
+                      🎤
+                    </div>
+                    <Button
+                      onClick={handleRemoveVoice}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      🎤 Voice message ({formatTime(selectedVoice.duration)})
+                    </p>
+                    <p className="text-xs text-white/60">
+                      {(selectedVoice.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <p className="mt-4 text-xs text-white/60 text-center hidden md:block">
           Press <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Shift + Enter</kbd> for new line
