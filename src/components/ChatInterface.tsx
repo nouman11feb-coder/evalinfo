@@ -22,6 +22,12 @@ interface Message {
     size: number;
     mimeType: string;
   };
+  voice?: {
+    url: string;
+    filename: string;
+    size: number;
+    duration: number;
+  };
 }
 
 interface Chat {
@@ -99,16 +105,17 @@ useEffect(() => {
   localStorage.setItem('intelliscan-chats', JSON.stringify(chats));
 }, [chats]);
 
-  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }, document?: { url: string; filename: string; size: number; mimeType: string }) => {
-    if ((!inputValue.trim() && !image && !document) || isLoading) return;
+  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }, document?: { url: string; filename: string; size: number; mimeType: string }, voice?: { url: string; filename: string; size: number; duration: number }) => {
+    if ((!inputValue.trim() && !image && !document && !voice) || isLoading) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue || (image ? `Sent an image: ${image.filename}` : '') || (document ? `Sent a document: ${document.filename}` : ''),
+      text: inputValue || (image ? `Sent an image: ${image.filename}` : '') || (document ? `Sent a document: ${document.filename}` : '') || (voice ? `Sent a voice message` : ''),
       sender: 'user',
       timestamp: new Date(),
       ...(image && { image }),
       ...(document && { document }),
+      ...(voice && { voice }),
     };
 
     // Update messages in the current chat
@@ -117,7 +124,7 @@ useEffect(() => {
         ? { 
             ...chat, 
             messages: [...chat.messages, newMessage],
-            lastMessage: inputValue || (image ? `📷 ${image.filename}` : '') || (document ? `📎 ${document.filename}` : ''),
+            lastMessage: inputValue || (image ? `📷 ${image.filename}` : '') || (document ? `📎 ${document.filename}` : '') || (voice ? `🎤 Voice message` : ''),
             timestamp: new Date()
           }
         : chat
@@ -135,7 +142,7 @@ useEffect(() => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          message: inputValue || (image ? `Image: ${image.filename}` : '') || (document ? `Document: ${document.filename}` : ''),
+          message: inputValue || (image ? `Image: ${image.filename}` : '') || (document ? `Document: ${document.filename}` : '') || (voice ? `Voice message` : ''),
           timestamp: new Date().toISOString(),
           sender: 'user',
           chat_id: activeChat,
@@ -153,6 +160,14 @@ useEffect(() => {
               filename: document.filename,
               size: document.size,
               mimeType: document.mimeType
+            }
+          }),
+          ...(voice && { 
+            voice: {
+              url: voice.url,
+              filename: voice.filename,
+              size: voice.size,
+              duration: voice.duration
             }
           }),
         }),

@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Image, X, FileText } from 'lucide-react';
+import { Send, Image, X, FileText, Mic, Square } from 'lucide-react';
 import { uploadImage, type UploadedImage } from '@/services/imageUpload';
 import { uploadDocument, type UploadedDocument, getDocumentIcon } from '@/services/documentUpload';
+import { uploadVoice, type UploadedVoice } from '@/services/voiceUpload';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChatInputProps {
-  onSendMessage: (message: string, image?: UploadedImage, document?: UploadedDocument) => void;
+  onSendMessage: (message: string, image?: UploadedImage, document?: UploadedDocument, voice?: UploadedVoice) => void;
   isLoading: boolean;
 }
 
@@ -15,10 +16,16 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState('');
   const [selectedImage, setSelectedImage] = useState<UploadedImage | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<UploadedDocument | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<UploadedVoice | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
   // Auto-resize textarea
@@ -35,11 +42,12 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   }, [inputValue]);
 
   const handleSend = () => {
-    if ((!inputValue.trim() && !selectedImage && !selectedDocument) || isLoading || isUploading) return;
-    onSendMessage(inputValue, selectedImage || undefined, selectedDocument || undefined);
+    if ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading) return;
+    onSendMessage(inputValue, selectedImage || undefined, selectedDocument || undefined, selectedVoice || undefined);
     setInputValue('');
     setSelectedImage(null);
     setSelectedDocument(null);
+    setSelectedVoice(null);
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +122,90 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     documentInputRef.current?.click();
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const duration = recordingTime;
+        
+        setIsUploading(true);
+        try {
+          const uploadedVoice = await uploadVoice(audioBlob, duration);
+          setSelectedVoice(uploadedVoice);
+          toast({
+            title: "Voice message recorded",
+            description: `${duration}s voice message ready to send`,
+          });
+        } catch (error) {
+          console.error('Voice upload error:', error);
+          toast({
+            title: "Upload failed",
+            description: error instanceof Error ? error.message : "Failed to upload voice message",
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploading(false);
+        }
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+
+      toast({
+        title: "Recording started",
+        description: "Speak your message...",
+      });
+    } catch (error) {
+      console.error('Recording error:', error);
+      toast({
+        title: "Recording failed",
+        description: "Unable to access microphone",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  const handleRemoveVoice = () => {
+    setSelectedVoice(null);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -125,7 +217,7 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     <div className="flex-shrink-0 border-t border-border bg-card/50 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto mobile-padding">
         {/* File Previews */}
-        {(selectedImage || selectedDocument) && (
+        {(selectedImage || selectedDocument || selectedVoice) && (
           <div className="mb-3 space-y-3">
             {selectedImage && (
               <div className="p-3 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
@@ -184,6 +276,34 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                 </div>
               </div>
             )}
+            
+            {selectedVoice && (
+              <div className="p-3 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-lg border border-border bg-primary/10 flex items-center justify-center text-2xl">
+                      🎤
+                    </div>
+                    <Button
+                      onClick={handleRemoveVoice}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      🎤 Voice message ({formatTime(selectedVoice.duration)})
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(selectedVoice.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -209,6 +329,20 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             >
               <FileText className="h-4 w-4" />
             </Button>
+            <Button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isLoading || isUploading}
+              size="icon"
+              variant="ghost"
+              className={`h-8 w-8 rounded-lg mobile-touch-target transition-colors ${
+                isRecording 
+                  ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30' 
+                  : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+              }`}
+              aria-label={isRecording ? "Stop recording" : "Record voice message"}
+            >
+              {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
           </div>
           <Textarea
             ref={textareaRef}
@@ -216,17 +350,19 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              (selectedImage || selectedDocument) 
-                ? "Add a message with your file..." 
-                : "Ask anything..."
+              isRecording 
+                ? `Recording... ${formatTime(recordingTime)}` 
+                : (selectedImage || selectedDocument || selectedVoice) 
+                  ? "Add a message with your file..." 
+                  : "Ask anything..."
             }
-            disabled={isLoading || isUploading}
+            disabled={isLoading || isUploading || isRecording}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-20 pr-14 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text"
+            className="max-h-40 resize-none border-0 bg-transparent pl-28 pr-14 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text"
           />
           <Button
             onClick={handleSend}
-            disabled={(!inputValue.trim() && !selectedImage && !selectedDocument) || isLoading || isUploading}
+            disabled={(!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording}
             size="icon"
             className="absolute right-3 bottom-3 h-9 w-9 rounded-xl bg-primary hover:bg-primary/90 shadow-lg hover-scale disabled:opacity-50 disabled:cursor-not-allowed mobile-touch-target"
             aria-label="Send message"
