@@ -380,7 +380,7 @@ useEffect(() => {
 }, [isEditingTitle]);
 
   return (
-    <div className="flex h-screen lovable-background overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div 
@@ -491,38 +491,50 @@ useEffect(() => {
         {/* Messages */}
         <ScrollArea className="flex-1">
           <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8">
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            {/* Empty state message */}
+            {messages.length === 1 && messages[0].sender === 'assistant' && (
+              <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                <h1 className="text-4xl md:text-5xl font-normal text-foreground text-center mb-8">
+                  Ready when you are.
+                </h1>
+              </div>
+            )}
+            
+            {/* Chat messages */}
+            {messages.length > 1 && (
+              <div className="space-y-6">
+                {messages.slice(1).map((message) => (
+                  <ChatMessage key={message.id} message={message} />
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                          AI
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
+                            <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                          </div>
+                          <span className="text-sm">AI is thinking...</span>
                         </div>
-                        <span className="text-sm">AI is thinking...</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
         {/* Input */}
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} messages={messages} />
       </div>
     </div>
   );

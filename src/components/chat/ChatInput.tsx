@@ -7,12 +7,37 @@ import { uploadDocument, type UploadedDocument, getDocumentIcon } from '@/servic
 import { uploadVoice, type UploadedVoice } from '@/services/voiceUpload';
 import { useToast } from '@/hooks/use-toast';
 
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+  image?: {
+    url: string;
+    filename: string;
+    size: number;
+  };
+  document?: {
+    url: string;
+    filename: string;
+    size: number;
+    mimeType: string;
+  };
+  voice?: {
+    url: string;
+    filename: string;
+    size: number;
+    duration: number;
+  };
+}
+
 interface ChatInputProps {
   onSendMessage: (message: string, image?: UploadedImage, document?: UploadedDocument, voice?: UploadedVoice) => void;
   isLoading: boolean;
+  messages: Message[];
 }
 
-const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState('');
   const [selectedImage, setSelectedImage] = useState<UploadedImage | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<UploadedDocument | null>(null);
@@ -216,19 +241,19 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   return (
     <div className="flex-shrink-0 bg-transparent">
       <div className="max-w-3xl mx-auto mobile-padding space-y-4">
-        {/* Suggested prompts */}
-        {!inputValue && !selectedImage && !selectedDocument && !selectedVoice && (
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
+        {/* Suggested prompts - only show when no conversation started */}
+        {!inputValue && !selectedImage && !selectedDocument && !selectedVoice && messages.length === 1 && (
+          <div className="flex flex-wrap gap-3 justify-center mb-6">
             {[
-              "PDF viewer",
-              "Fitness tracker", 
-              "SaaS landing page",
-              "E-commerce product page"
+              "Help me write",
+              "Summarize text", 
+              "Create a plan",
+              "Brainstorm ideas"
             ].map((suggestion) => (
               <button
                 key={suggestion}
-                onClick={() => setInputValue(`Create a ${suggestion.toLowerCase()}`)}
-                className="suggestion-chip px-4 py-2 rounded-full text-white/90 text-sm font-medium hover:text-white"
+                onClick={() => setInputValue(suggestion)}
+                className="px-4 py-3 rounded-2xl bg-muted/50 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all text-sm font-medium"
               >
                 {suggestion}
               </button>
@@ -236,32 +261,29 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           </div>
         )}
 
-        <div className="relative rounded-3xl input-enhanced overflow-hidden max-w-2xl mx-auto">
+        <div className="relative rounded-3xl chatgpt-input overflow-hidden max-w-3xl mx-auto">
           <div className="absolute left-4 bottom-4 flex items-center gap-2">
             <button
-              className="suggestion-chip px-3 py-1.5 rounded-full text-white/80 text-sm font-medium hover:text-white flex items-center gap-2"
+              className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
               onClick={handleImageButtonClick}
             >
-              <Image className="h-4 w-4" />
-              Attach
+              <Image className="h-5 w-5" />
             </button>
             <button
-              className="suggestion-chip px-3 py-1.5 rounded-full text-white/80 text-sm font-medium hover:text-white flex items-center gap-2"
+              className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
               onClick={handleDocumentButtonClick}
             >
-              <FileText className="h-4 w-4" />
-              Document
+              <FileText className="h-5 w-5" />
             </button>
             <button
-              className={`suggestion-chip px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 ${
+              className={`p-2 rounded-lg transition-all ${
                 isRecording 
-                  ? 'text-red-400 hover:text-red-300' 
-                  : 'text-white/80 hover:text-white'
+                  ? 'text-red-500 hover:text-red-400 bg-red-500/10' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
               onClick={isRecording ? stopRecording : startRecording}
             >
-              {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              {isRecording ? 'Stop' : 'Voice'}
+              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </button>
           </div>
           <Textarea
@@ -273,25 +295,25 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
               isRecording 
                 ? `Recording... ${formatTime(recordingTime)}` 
                 : (selectedImage || selectedDocument || selectedVoice) 
-                  ? "Add a message with your file..." 
-                  : "Ask Intelliscan to create a web app that..."
+                  ? "Message Intelliscan..." 
+                  : "Message Intelliscan"
             }
             disabled={isLoading || isUploading || isRecording}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-5 text-white placeholder:text-white/60 focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
+            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-5 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
           />
           <div 
-            className={`absolute right-4 bottom-4 h-10 w-10 rounded-full bg-white hover:bg-white/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
+            className={`absolute right-4 bottom-4 h-10 w-10 rounded-lg bg-foreground hover:bg-foreground/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
               ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
-                ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:shadow-lg hover:scale-105'
+                ? 'opacity-30 cursor-not-allowed' 
+                : 'hover:scale-105'
             }`}
             onClick={handleSend}
             role="button"
             tabIndex={0}
             aria-label="Send message"
           >
-            <Send className="h-5 w-5 text-gray-800" />
+            <Send className="h-5 w-5 text-background" />
           </div>
         </div>
 
@@ -315,15 +337,15 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
         {/* File Previews */}
         {(selectedImage || selectedDocument || selectedVoice) && (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-3 max-w-3xl mx-auto">
             {selectedImage && (
-              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+              <div className="p-3 rounded-xl border border-border bg-muted/30 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <img 
                       src={selectedImage.url} 
                       alt={selectedImage.filename}
-                      className="w-16 h-16 object-cover rounded-lg border border-white/20"
+                      className="w-16 h-16 object-cover rounded-lg border border-border"
                     />
                     <Button
                       onClick={handleRemoveImage}
@@ -335,10 +357,10 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                     </Button>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       📷 {selectedImage.filename}
                     </p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-muted-foreground">
                       {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -347,10 +369,10 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             )}
             
             {selectedDocument && (
-              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+              <div className="p-3 rounded-xl border border-border bg-muted/30 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-2xl">
+                    <div className="w-16 h-16 rounded-lg border border-border bg-muted/50 flex items-center justify-center text-2xl">
                       {getDocumentIcon(selectedDocument.mimeType)}
                     </div>
                     <Button
@@ -363,10 +385,10 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                     </Button>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {selectedDocument.filename}
                     </p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-muted-foreground">
                       {(selectedDocument.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -375,10 +397,10 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
             )}
             
             {selectedVoice && (
-              <div className="p-3 rounded-xl border border-white/20 bg-black/20 backdrop-blur-sm">
+              <div className="p-3 rounded-xl border border-border bg-muted/30 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-lg border border-white/20 bg-white/5 flex items-center justify-center text-2xl">
+                    <div className="w-16 h-16 rounded-lg border border-border bg-muted/50 flex items-center justify-center text-2xl">
                       🎤
                     </div>
                     <Button
@@ -391,10 +413,10 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                     </Button>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       🎤 Voice message ({formatTime(selectedVoice.duration)})
                     </p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-muted-foreground">
                       {(selectedVoice.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -404,8 +426,8 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           </div>
         )}
 
-        <p className="mt-4 text-xs text-white/60 text-center hidden md:block">
-          Press <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-black/20 rounded text-white/70 font-mono text-xs">Shift + Enter</kbd> for new line
+        <p className="mt-4 text-xs text-muted-foreground text-center hidden md:block">
+          Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Enter</kbd> to send • <kbd className="px-1.5 py-0.5 bg-muted rounded text-muted-foreground font-mono text-xs">Shift + Enter</kbd> for new line
         </p>
       </div>
     </div>
