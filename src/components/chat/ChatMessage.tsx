@@ -42,124 +42,173 @@ const renderBold = (text: string): React.ReactNode => {
 
 const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
-    <article
-      className={`w-full rounded-2xl border p-4 md:p-5 hover-scale ${
-        message.sender === 'assistant' 
-          ? 'chat-bubble-assistant text-chat-assistant-foreground' 
-          : 'chat-bubble-user text-chat-user-foreground border-none'
-      }`}
-    >
-      <div className="flex items-start gap-3 md:gap-4">
-        <Avatar className="h-8 w-8 md:h-9 md:w-9 flex-shrink-0 shadow-sm">
-          <AvatarFallback className={
-            message.sender === 'assistant' 
-              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold' 
-              : 'bg-primary text-primary-foreground font-semibold'
-          }>
-            {message.sender === 'assistant' ? 'AI' : 'U'}
+    <div className={`flex w-full gap-4 group ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+      {message.sender === 'assistant' && (
+        <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm">
+          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+            AI
           </AvatarFallback>
         </Avatar>
-        <div className="min-w-0 flex-1">
-          {message.image && (
-            <div className="mb-3">
-              <img 
-                src={message.image.url} 
-                alt={message.image.filename}
-                className="max-w-sm w-full h-auto rounded-xl border border-border shadow-sm hover-scale cursor-pointer"
-                onClick={() => window.open(message.image?.url, '_blank')}
-              />
-              <p className="mt-2 text-xs text-muted-foreground">
-                📷 {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
-              </p>
-            </div>
-          )}
-          {message.document && (
-            <div className="mb-3 p-4 rounded-xl border border-border bg-card/30 hover-scale">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center text-xl flex-shrink-0">
-                  {getDocumentIcon(message.document.mimeType)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {message.document.filename}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {(message.document.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => window.open(message.document?.url, '_blank')}
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 rounded-lg hover:bg-muted/50"
-                    aria-label="View document"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = message.document?.url || '';
-                      link.download = message.document?.filename || 'document';
-                      link.click();
-                    }}
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 rounded-lg hover:bg-muted/50"
-                    aria-label="Download document"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
+      )}
+      
+      <div className={`max-w-[85%] md:max-w-[70%] ${message.sender === 'user' ? 'order-1' : 'order-2'}`}>
+        <div
+          className={`rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md ${
+            message.sender === 'assistant'
+              ? 'bg-card border border-border text-card-foreground'
+              : 'bg-primary text-primary-foreground ml-auto'
+          }`}
+        >
+          <div className="space-y-3">
+            {message.image && (
+              <div className="space-y-2">
+                <img 
+                  src={message.image.url} 
+                  alt={message.image.filename}
+                  className="max-w-xs w-full h-auto rounded-lg border border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => window.open(message.image?.url, '_blank')}
+                />
+                <p className={`text-xs ${message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                  📷 {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            )}
+            {message.document && (
+              <div className={`p-3 rounded-lg border transition-colors ${
+                message.sender === 'user' 
+                  ? 'border-primary-foreground/20 bg-primary-foreground/10' 
+                  : 'border-border bg-muted/30'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${
+                    message.sender === 'user' ? 'bg-primary-foreground/20' : 'bg-muted/50'
+                  }`}>
+                    {getDocumentIcon(message.document.mimeType)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${
+                      message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                    }`}>
+                      {message.document.filename}
+                    </p>
+                    <p className={`text-xs ${
+                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    }`}>
+                      {(message.document.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      onClick={() => window.open(message.document?.url, '_blank')}
+                      size="icon"
+                      variant="ghost"
+                      className={`h-7 w-7 rounded-md ${
+                        message.sender === 'user' 
+                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          : 'hover:bg-muted/50'
+                      }`}
+                      aria-label="View document"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = message.document?.url || '';
+                        link.download = message.document?.filename || 'document';
+                        link.click();
+                      }}
+                      size="icon"
+                      variant="ghost"
+                      className={`h-7 w-7 rounded-md ${
+                        message.sender === 'user' 
+                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          : 'hover:bg-muted/50'
+                      }`}
+                      aria-label="Download document"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {message.voice && (
-            <div className="mb-3 p-4 rounded-xl border border-border bg-card/30 hover-scale">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-                  🎤
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">
-                    Voice message ({Math.floor(message.voice.duration / 60)}:{(message.voice.duration % 60).toString().padStart(2, '0')})
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {(message.voice.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <audio controls className="h-8">
-                    <source src={message.voice.url} type="audio/webm" />
-                    Your browser does not support the audio element.
-                  </audio>
-                  <Button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = message.voice?.url || '';
-                      link.download = message.voice?.filename || 'voice-message.webm';
-                      link.click();
-                    }}
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 rounded-lg hover:bg-muted/50"
-                    aria-label="Download voice message"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
+            )}
+            {message.voice && (
+              <div className={`p-3 rounded-lg border transition-colors ${
+                message.sender === 'user' 
+                  ? 'border-primary-foreground/20 bg-primary-foreground/10' 
+                  : 'border-border bg-muted/30'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${
+                    message.sender === 'user' ? 'bg-primary-foreground/20' : 'bg-primary/10'
+                  }`}>
+                    🎤
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${
+                      message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                    }`}>
+                      Voice message ({Math.floor(message.voice.duration / 60)}:{(message.voice.duration % 60).toString().padStart(2, '0')})
+                    </p>
+                    <p className={`text-xs ${
+                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                    }`}>
+                      {(message.voice.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <audio controls className="h-8 max-w-32">
+                      <source src={message.voice.url} type="audio/webm" />
+                      Your browser does not support the audio element.
+                    </audio>
+                    <Button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = message.voice?.url || '';
+                        link.download = message.voice?.filename || 'voice-message.webm';
+                        link.click();
+                      }}
+                      size="icon"
+                      variant="ghost"
+                      className={`h-7 w-7 rounded-md ${
+                        message.sender === 'user' 
+                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          : 'hover:bg-muted/50'
+                      }`}
+                      aria-label="Download voice message"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {message.text && (
-            <p className="mobile-text leading-relaxed whitespace-pre-wrap">
-              {renderBold(message.text)}
-            </p>
-          )}
+            )}
+            {message.text && (
+              <div className={`mobile-text leading-relaxed whitespace-pre-wrap ${
+                message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+              }`}>
+                {renderBold(message.text)}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className={`flex items-center mt-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity ${
+          message.sender === 'user' ? 'justify-end text-muted-foreground' : 'justify-start text-muted-foreground'
+        }`}>
+          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>
-    </article>
+      
+      {message.sender === 'user' && (
+        <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm order-2">
+          <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-sm">
+            U
+          </AvatarFallback>
+        </Avatar>
+      )}
+    </div>
   );
 };
 

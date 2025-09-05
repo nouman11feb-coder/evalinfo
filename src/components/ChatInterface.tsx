@@ -5,6 +5,7 @@ import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Message {
   id: string;
@@ -394,12 +395,32 @@ const handleToggleMobileMenu = () => {
         
         {/* Messages */}
         <ScrollArea className="flex-1">
-          <div className="max-w-4xl mx-auto px-3 py-4 md:px-4 md:py-6">
-            <div className="space-y-3 md:space-y-4">
+          <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8">
+            <div className="space-y-6">
               {messages.map((message) => (
                 <ChatMessage key={message.id} message={message} />
               ))}
-              {isLoading && <LoadingMessage />}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
+                        AI
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                        </div>
+                        <span className="text-sm">AI is thinking...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div ref={messagesEndRef} />
           </div>
