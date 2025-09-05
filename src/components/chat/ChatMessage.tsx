@@ -60,8 +60,8 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
         <div
           className={`rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md ${
             message.sender === 'assistant'
-              ? 'bg-card border border-border text-card-foreground'
-              : 'bg-primary text-primary-foreground ml-auto'
+              ? 'chat-bubble-assistant'
+              : 'chat-bubble-user ml-auto'
           }`}
         >
           <div className="space-y-3">
@@ -73,7 +73,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                   className="max-w-xs w-full h-auto rounded-lg border border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => window.open(message.image?.url, '_blank')}
                 />
-                <p className={`text-xs ${message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                <p className={`text-xs ${message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
                   📷 {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
@@ -81,23 +81,23 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             {message.document && (
               <div className={`p-3 rounded-lg border transition-colors ${
                 message.sender === 'user' 
-                  ? 'border-primary-foreground/20 bg-primary-foreground/10' 
+                  ? 'border-white/20 bg-white/10' 
                   : 'border-border bg-muted/30'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${
-                    message.sender === 'user' ? 'bg-primary-foreground/20' : 'bg-muted/50'
+                    message.sender === 'user' ? 'bg-white/20' : 'bg-muted/50'
                   }`}>
                     {getDocumentIcon(message.document.mimeType)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${
-                      message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                      message.sender === 'user' ? 'text-white' : 'text-foreground'
                     }`}>
                       {message.document.filename}
                     </p>
                     <p className={`text-xs ${
-                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                      message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
                     }`}>
                       {(message.document.size / 1024 / 1024).toFixed(2)} MB
                     </p>
@@ -109,7 +109,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                       variant="ghost"
                       className={`h-7 w-7 rounded-md ${
                         message.sender === 'user' 
-                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          ? 'hover:bg-white/20 text-white/80' 
                           : 'hover:bg-muted/50'
                       }`}
                       aria-label="View document"
@@ -127,7 +127,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                       variant="ghost"
                       className={`h-7 w-7 rounded-md ${
                         message.sender === 'user' 
-                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          ? 'hover:bg-white/20 text-white/80' 
                           : 'hover:bg-muted/50'
                       }`}
                       aria-label="Download document"
@@ -141,23 +141,23 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             {message.voice && (
               <div className={`p-3 rounded-lg border transition-colors ${
                 message.sender === 'user' 
-                  ? 'border-primary-foreground/20 bg-primary-foreground/10' 
+                  ? 'border-white/20 bg-white/10' 
                   : 'border-border bg-muted/30'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${
-                    message.sender === 'user' ? 'bg-primary-foreground/20' : 'bg-primary/10'
+                    message.sender === 'user' ? 'bg-white/20' : 'bg-primary/10'
                   }`}>
                     🎤
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium ${
-                      message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                      message.sender === 'user' ? 'text-white' : 'text-foreground'
                     }`}>
                       Voice message ({Math.floor(message.voice.duration / 60)}:{(message.voice.duration % 60).toString().padStart(2, '0')})
                     </p>
                     <p className={`text-xs ${
-                      message.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                      message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
                     }`}>
                       {(message.voice.size / 1024 / 1024).toFixed(2)} MB
                     </p>
@@ -178,7 +178,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                       variant="ghost"
                       className={`h-7 w-7 rounded-md ${
                         message.sender === 'user' 
-                          ? 'hover:bg-primary-foreground/20 text-primary-foreground/80' 
+                          ? 'hover:bg-white/20 text-white/80' 
                           : 'hover:bg-muted/50'
                       }`}
                       aria-label="Download voice message"
@@ -191,7 +191,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             )}
             {message.text && (
               <div className={`mobile-text leading-relaxed whitespace-pre-wrap ${
-                message.sender === 'user' ? 'text-primary-foreground' : 'text-foreground'
+                message.sender === 'user' ? 'text-white' : 'text-foreground'
               }`}>
                 {renderBold(message.text)}
               </div>
