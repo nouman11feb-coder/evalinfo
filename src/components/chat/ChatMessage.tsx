@@ -45,6 +45,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
     <div className={`flex w-full gap-4 group ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
       {message.sender === 'assistant' && (
         <Avatar className="h-8 w-8 flex-shrink-0 shadow-sm">
+          <img 
+            src="/lovable-uploads/8f69d486-819f-4516-af2f-02173ca18d78.png" 
+            alt="Intelliscan AI" 
+            className="h-8 w-8 rounded-full object-cover"
+          />
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm">
             AI
           </AvatarFallback>
