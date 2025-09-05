@@ -6,6 +6,9 @@ import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Check, X, Edit2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   id: string;
@@ -63,7 +66,10 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempTitle, setTempTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const currentChat = chats.find(chat => chat.id === activeChat);
   const messages = currentChat?.messages || [];
@@ -327,6 +333,52 @@ const handleToggleMobileMenu = () => {
   setMobileMenuOpen(!mobileMenuOpen);
 };
 
+const handleRenameChat = (chatId: string, newName: string) => {
+  if (!newName.trim()) return;
+  
+  setChats(prev => prev.map(chat => 
+    chat.id === chatId 
+      ? { ...chat, name: newName.trim() }
+      : chat
+  ));
+};
+
+const startEditingTitle = () => {
+  setTempTitle(currentChat?.name || '');
+  setIsEditingTitle(true);
+  // Focus input after state update
+  setTimeout(() => titleInputRef.current?.focus(), 0);
+};
+
+const saveTitle = () => {
+  if (tempTitle.trim() && currentChat) {
+    handleRenameChat(currentChat.id, tempTitle.trim());
+  }
+  setIsEditingTitle(false);
+  setTempTitle('');
+};
+
+const cancelEdit = () => {
+  setIsEditingTitle(false);
+  setTempTitle('');
+};
+
+const handleTitleKeyPress = (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    saveTitle();
+  } else if (e.key === 'Escape') {
+    cancelEdit();
+  }
+};
+
+// Focus input when editing starts
+useEffect(() => {
+  if (isEditingTitle && titleInputRef.current) {
+    titleInputRef.current.focus();
+    titleInputRef.current.select();
+  }
+}, [isEditingTitle]);
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile overlay */}
@@ -356,6 +408,7 @@ const handleToggleMobileMenu = () => {
             setMobileMenuOpen(false); // Close mobile menu on new chat
           }}
           onDeleteChat={handleDeleteChat}
+          onRenameChat={handleRenameChat}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
           onToggleMobileMenu={handleToggleMobileMenu}
@@ -378,9 +431,51 @@ const handleToggleMobileMenu = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-                <h2 className="text-lg font-semibold text-foreground">
-                  {currentChat?.name || 'Chat'}
-                </h2>
+                <div className="flex items-center gap-2">
+                  {isEditingTitle ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={titleInputRef}
+                        value={tempTitle}
+                        onChange={(e) => setTempTitle(e.target.value)}
+                        onKeyDown={handleTitleKeyPress}
+                        onBlur={cancelEdit}
+                        className="text-lg font-semibold bg-transparent border-0 px-0 py-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                        placeholder="Chat name..."
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={saveTitle}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Check className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={cancelEdit}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 group">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        {currentChat?.name || 'Chat'}
+                      </h2>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={startEditingTitle}
+                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="hidden sm:block px-4 py-2 rounded-xl bg-muted/50 border border-border">
