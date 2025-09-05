@@ -5,6 +5,11 @@ interface Message {
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  image?: {
+    url: string;
+    filename: string;
+    size: number;
+  };
 }
 
 interface ChatMessageProps {
@@ -40,9 +45,24 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="mobile-text leading-relaxed whitespace-pre-wrap">
-            {renderBold(message.text)}
-          </p>
+          {message.image && (
+            <div className="mb-3">
+              <img 
+                src={message.image.url} 
+                alt={message.image.filename}
+                className="max-w-sm w-full h-auto rounded-xl border border-border shadow-sm hover-scale cursor-pointer"
+                onClick={() => window.open(message.image?.url, '_blank')}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                {message.image.filename} • {(message.image.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+            </div>
+          )}
+          {message.text && (
+            <p className="mobile-text leading-relaxed whitespace-pre-wrap">
+              {renderBold(message.text)}
+            </p>
+          )}
         </div>
       </div>
     </article>

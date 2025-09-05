@@ -11,6 +11,11 @@ interface Message {
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  image?: {
+    url: string;
+    filename: string;
+    size: number;
+  };
 }
 
 interface Chat {
@@ -88,14 +93,15 @@ useEffect(() => {
   localStorage.setItem('intelliscan-chats', JSON.stringify(chats));
 }, [chats]);
 
-  const handleSendMessage = async (inputValue: string) => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }) => {
+    if ((!inputValue.trim() && !image) || isLoading) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: inputValue || (image ? `Sent an image: ${image.filename}` : ''),
       sender: 'user',
       timestamp: new Date(),
+      ...(image && { image }),
     };
 
     // Update messages in the current chat
@@ -104,7 +110,7 @@ useEffect(() => {
         ? { 
             ...chat, 
             messages: [...chat.messages, newMessage],
-            lastMessage: inputValue,
+            lastMessage: inputValue || (image ? `📷 ${image.filename}` : ''),
             timestamp: new Date()
           }
         : chat
@@ -122,11 +128,18 @@ useEffect(() => {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          message: inputValue,
+          message: inputValue || (image ? `Image: ${image.filename}` : ''),
           timestamp: new Date().toISOString(),
           sender: 'user',
           chat_id: activeChat,
           triggered_from: window.location.origin,
+          ...(image && { 
+            image: {
+              url: image.url,
+              filename: image.filename,
+              size: image.size
+            }
+          }),
         }),
       });
 
