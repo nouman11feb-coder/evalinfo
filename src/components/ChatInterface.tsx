@@ -484,36 +484,36 @@ useEffect(() => {
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {user && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Signed in as {user.email}</span>
-                  </div>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-sm">
-                          {user?.email?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                      <User className="h-4 w-4" />
-                      <span>{user?.email || 'User'}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign Out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
                 <ThemeToggle />
-              </div>
+               </div>
+               <div className="flex items-center gap-3">
+                 {user && (
+                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                     <span>Signed in as {user.email}</span>
+                   </div>
+                 )}
+                 <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="rounded-full">
+                       <Avatar className="h-8 w-8">
+                         <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-sm">
+                           {user?.email?.charAt(0).toUpperCase() || 'U'}
+                         </AvatarFallback>
+                       </Avatar>
+                     </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent align="end" className="w-48">
+                     <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                       <User className="h-4 w-4" />
+                       <span>{user?.email || 'User'}</span>
+                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                       <LogOut className="h-4 w-4" />
+                       <span>Sign Out</span>
+                     </DropdownMenuItem>
+                   </DropdownMenuContent>
+                 </DropdownMenu>
+               </div>
             </div>
           </div>
         </div>
