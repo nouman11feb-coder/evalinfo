@@ -261,62 +261,101 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
           </div>
         )}
 
-        <div className="relative rounded-3xl chatgpt-input overflow-hidden max-w-3xl mx-auto">
-          <div className="absolute left-4 bottom-4 flex items-center gap-2">
-            <button
-              className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
-              onClick={handleImageButtonClick}
-            >
-              <Image className="h-5 w-5" />
-            </button>
-            <button
-              className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
-              onClick={handleDocumentButtonClick}
-            >
-              <FileText className="h-5 w-5" />
-            </button>
-          </div>
-          <Textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              isRecording 
-                ? `Recording... ${formatTime(recordingTime)}` 
-                : (selectedImage || selectedDocument || selectedVoice) 
-                  ? "Message Intelliscan..." 
-                  : "Message Intelliscan"
-            }
-            disabled={isLoading || isUploading || isRecording}
-            rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-24 pr-32 py-5 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
-          />
-          <div className="absolute right-4 bottom-4 flex items-center gap-2">
-            <button
-              className={`p-2 rounded-lg transition-all ${
-                isRecording 
-                  ? 'text-red-500 hover:text-red-400 bg-red-500/10' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              }`}
-              onClick={isRecording ? stopRecording : startRecording}
-            >
-              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </button>
-            <div 
-              className={`h-10 w-10 rounded-lg bg-foreground hover:bg-foreground/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
-                ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
-                  ? 'opacity-30 cursor-not-allowed' 
-                  : 'hover:scale-105'
-              }`}
-              onClick={handleSend}
-              role="button"
-              tabIndex={0}
-              aria-label="Send message"
-            >
-              <Send className="h-5 w-5 text-background" />
+        <div className={`relative rounded-3xl overflow-hidden max-w-3xl mx-auto transition-all duration-300 ${
+          isRecording ? 'bg-red-500/10 border-2 border-red-500/30' : 'chatgpt-input'
+        }`}>
+          {isRecording ? (
+            // WhatsApp-style recording interface
+            <div className="flex items-center px-6 py-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-red-500 font-medium text-sm">Recording</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className={`w-1 bg-red-500 rounded-full transition-all duration-150 ${
+                        (recordingTime + i) % 5 === 0 ? 'h-4' : 
+                        (recordingTime + i) % 5 === 1 ? 'h-6' :
+                        (recordingTime + i) % 5 === 2 ? 'h-3' :
+                        (recordingTime + i) % 5 === 3 ? 'h-5' : 'h-2'
+                      }`}
+                      style={{ animationDelay: `${i * 100}ms` }}
+                    ></div>
+                  ))}
+                </div>
+                <span className="text-foreground font-mono text-sm">
+                  {formatTime(recordingTime)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-muted-foreground hidden sm:block">
+                  Tap to stop
+                </div>
+                <button
+                  className="p-3 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all hover:scale-105"
+                  onClick={stopRecording}
+                >
+                  <Square className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Normal input interface
+            <>
+              <div className="absolute left-4 bottom-4 flex items-center gap-2">
+                <button
+                  className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
+                  onClick={handleImageButtonClick}
+                >
+                  <Image className="h-5 w-5" />
+                </button>
+                <button
+                  className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all"
+                  onClick={handleDocumentButtonClick}
+                >
+                  <FileText className="h-5 w-5" />
+                </button>
+              </div>
+              <Textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  (selectedImage || selectedDocument || selectedVoice) 
+                    ? "Message Intelliscan..." 
+                    : "Message Intelliscan"
+                }
+                disabled={isLoading || isUploading}
+                rows={1}
+                className="max-h-40 resize-none border-0 bg-transparent pl-24 pr-32 py-5 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
+              />
+              <div className="absolute right-4 bottom-4 flex items-center gap-2">
+                <button
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  onClick={startRecording}
+                >
+                  <Mic className="h-5 w-5" />
+                </button>
+                <div 
+                  className={`h-10 w-10 rounded-lg bg-foreground hover:bg-foreground/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
+                    ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading)
+                      ? 'opacity-30 cursor-not-allowed' 
+                      : 'hover:scale-105'
+                  }`}
+                  onClick={handleSend}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Send message"
+                >
+                  <Send className="h-5 w-5 text-background" />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Hidden file inputs */}
