@@ -275,16 +275,6 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
             >
               <FileText className="h-5 w-5" />
             </button>
-            <button
-              className={`p-2 rounded-lg transition-all ${
-                isRecording 
-                  ? 'text-red-500 hover:text-red-400 bg-red-500/10' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              }`}
-              onClick={isRecording ? stopRecording : startRecording}
-            >
-              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </button>
           </div>
           <Textarea
             ref={textareaRef}
@@ -300,20 +290,32 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
             }
             disabled={isLoading || isUploading || isRecording}
             rows={1}
-            className="max-h-40 resize-none border-0 bg-transparent pl-32 pr-16 py-5 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
+            className="max-h-40 resize-none border-0 bg-transparent pl-24 pr-32 py-5 text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 mobile-text text-base"
           />
-          <div 
-            className={`absolute right-4 bottom-4 h-10 w-10 rounded-lg bg-foreground hover:bg-foreground/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
-              ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
-                ? 'opacity-30 cursor-not-allowed' 
-                : 'hover:scale-105'
-            }`}
-            onClick={handleSend}
-            role="button"
-            tabIndex={0}
-            aria-label="Send message"
-          >
-            <Send className="h-5 w-5 text-background" />
+          <div className="absolute right-4 bottom-4 flex items-center gap-2">
+            <button
+              className={`p-2 rounded-lg transition-all ${
+                isRecording 
+                  ? 'text-red-500 hover:text-red-400 bg-red-500/10' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+              onClick={isRecording ? stopRecording : startRecording}
+            >
+              {isRecording ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </button>
+            <div 
+              className={`h-10 w-10 rounded-lg bg-foreground hover:bg-foreground/90 cursor-pointer flex items-center justify-center mobile-touch-target transition-all ${
+                ((!inputValue.trim() && !selectedImage && !selectedDocument && !selectedVoice) || isLoading || isUploading || isRecording)
+                  ? 'opacity-30 cursor-not-allowed' 
+                  : 'hover:scale-105'
+              }`}
+              onClick={handleSend}
+              role="button"
+              tabIndex={0}
+              aria-label="Send message"
+            >
+              <Send className="h-5 w-5 text-background" />
+            </div>
           </div>
         </div>
 
