@@ -168,10 +168,6 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
         try {
           const uploadedVoice = await uploadVoice(audioBlob, duration);
           setSelectedVoice(uploadedVoice);
-          toast({
-            title: "Voice message recorded",
-            description: `${duration}s voice message ready to send`,
-          });
         } catch (error) {
           console.error('Voice upload error:', error);
           toast({
@@ -194,11 +190,6 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
-
-      toast({
-        title: "Recording started",
-        description: "Speak your message...",
-      });
     } catch (error) {
       console.error('Recording error:', error);
       toast({
