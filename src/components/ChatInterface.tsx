@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import ChatHistory from './chat/ChatHistory';
 import ChatMessage from './chat/ChatMessage';
@@ -7,9 +8,10 @@ import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Check, X, Edit2 } from 'lucide-react';
+import { Check, X, Edit2, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Message {
   id: string;
@@ -44,6 +46,7 @@ interface Chat {
 }
 
 const ChatInterface = () => {
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const webhookUrl = "http://n8n13.intelliscan.online:5687/webhook/b96886e7-b9e0-419c-a59f-59306a89db88";
   
@@ -372,6 +375,10 @@ const handleTitleKeyPress = (e: React.KeyboardEvent) => {
   }
 };
 
+const handleSignOut = async () => {
+  await signOut();
+};
+
 // Focus input when editing starts
 useEffect(() => {
   if (isEditingTitle && titleInputRef.current) {
@@ -479,11 +486,32 @@ useEffect(() => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="hidden sm:block px-4 py-2 rounded-xl bg-muted/50 border border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Authentication required - Connect to Supabase to enable login/logout
-                  </p>
-                </div>
+                {user && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Signed in as {user.email}</span>
+                  </div>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-sm">
+                          {user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      <span>{user?.email || 'User'}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <ThemeToggle />
               </div>
             </div>
