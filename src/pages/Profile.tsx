@@ -7,13 +7,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PricingPlans from '@/components/PricingPlans';
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
   const [profile, setProfile] = useState({
     display_name: '',
     email: user?.email || '',
@@ -147,8 +149,25 @@ const Profile = () => {
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </form>
+            
+            <div className="mt-6 pt-6 border-t">
+              <Button 
+                onClick={() => setShowPricing(!showPricing)}
+                variant="outline" 
+                className="w-full"
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                {showPricing ? 'Hide Pricing Plans' : 'View Pricing Plans'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
+
+        {showPricing && (
+          <div className="mt-6">
+            <PricingPlans />
+          </div>
+        )}
       </div>
     </div>
   );
