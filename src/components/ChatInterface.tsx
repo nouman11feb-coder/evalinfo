@@ -5,6 +5,7 @@ import ChatHistory from './chat/ChatHistory';
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
+import PricingPlans from './PricingPlans';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { Check, X, Edit2, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Link } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -502,16 +504,18 @@ useEffect(() => {
                        </Avatar>
                      </Button>
                    </DropdownMenuTrigger>
-                   <DropdownMenuContent align="end" className="w-48">
-                     <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                       <User className="h-4 w-4" />
-                       <span>{user?.email || 'User'}</span>
-                     </DropdownMenuItem>
-                     <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
-                       <LogOut className="h-4 w-4" />
-                       <span>Sign Out</span>
-                     </DropdownMenuItem>
-                   </DropdownMenuContent>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                          <User className="h-4 w-4" />
+                          <span>Edit Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                        <LogOut className="h-4 w-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
                  </DropdownMenu>
                </div>
             </div>
@@ -566,6 +570,8 @@ useEffect(() => {
         {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} messages={messages} />
       </div>
+      
+      <PricingPlans />
     </div>
   );
 };

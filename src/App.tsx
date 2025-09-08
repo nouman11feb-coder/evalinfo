@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const AppContent = () => {
         element={user ? <Index /> : <Auth />} 
       />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/profile" element={user ? <Profile /> : <Auth />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
