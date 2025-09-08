@@ -5,7 +5,6 @@ import ChatHistory from './chat/ChatHistory';
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
-import PricingPlans from './PricingPlans';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -570,8 +569,6 @@ useEffect(() => {
         {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} messages={messages} />
       </div>
-      
-      <PricingPlans />
     </div>
   );
 };
