@@ -49,7 +49,7 @@ interface Chat {
 const ChatInterface = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const webhookUrl = "https://n8n4.evalinfo.com/webhook-test/2bc8da38-7484-4aa2-a1fc-eb1659f696c0";
+  const webhookUrl = "https://n8n4.evalinfo.com/webhook/2bc8da38-7484-4aa2-a1fc-eb1659f696c0";
   
   const [chats, setChats] = useState<Chat[]>([
     {
