@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 import ChatHistory from './chat/ChatHistory';
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
@@ -48,7 +47,6 @@ interface Chat {
 
 const ChatInterface = () => {
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
   const webhookUrl = "https://n8n4.evalinfo.com/webhook/2bc8da38-7484-4aa2-a1fc-eb1659f696c0";
   
   const [chats, setChats] = useState<Chat[]>([
@@ -285,12 +283,6 @@ useEffect(() => {
             }
           : chat
       ));
-      
-      toast({
-        title: "Error",
-        description: "Failed to send message to webhook. Please check the connection.",
-        variant: "destructive",
-      });
     }
   };
 
