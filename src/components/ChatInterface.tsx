@@ -367,6 +367,24 @@ const handleSignOut = async () => {
   await signOut();
 };
 
+const handleSearchResultSelect = (chatId: string, messageId: string) => {
+  setActiveChat(chatId);
+  setMobileMenuOpen(false);
+  
+  // Scroll to the message after a brief delay to ensure chat is loaded
+  setTimeout(() => {
+    const messageElement = document.getElementById(`message-${messageId}`);
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Add a highlight effect
+      messageElement.classList.add('ring-2', 'ring-primary', 'rounded-lg');
+      setTimeout(() => {
+        messageElement.classList.remove('ring-2', 'ring-primary', 'rounded-lg');
+      }, 2000);
+    }
+  }, 100);
+};
+
 // Focus input when editing starts
 useEffect(() => {
   if (isEditingTitle && titleInputRef.current) {
@@ -438,6 +456,8 @@ useEffect(() => {
                 onTitleChange={setTempTitle}
                 onTitleKeyPress={handleTitleKeyPress}
                 titleInputRef={titleInputRef}
+                chats={chats}
+                onSearchResultSelect={handleSearchResultSelect}
               />
             </div>
           </div>
@@ -459,7 +479,9 @@ useEffect(() => {
             {messages.length > 1 && (
               <div className="space-y-6">
                 {messages.slice(1).map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                  <div key={message.id} id={`message-${message.id}`}>
+                    <ChatMessage message={message} />
+                  </div>
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
