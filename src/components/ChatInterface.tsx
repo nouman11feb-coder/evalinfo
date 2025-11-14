@@ -7,11 +7,9 @@ import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Check, X, Edit2, LogOut, User } from 'lucide-react';
+import { Check, X, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from './ThemeToggle';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Link } from 'react-router-dom';
+import NavMenu from './NavMenu';
 
 interface Message {
   id: string;
@@ -418,7 +416,7 @@ useEffect(() => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header with User Profile */}
+        {/* Header */}
         <div className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto mobile-padding">
             <div className="flex items-center justify-between">
@@ -477,38 +475,8 @@ useEffect(() => {
                     </div>
                   )}
                 </div>
-                <ThemeToggle />
-               </div>
-               <div className="flex items-center gap-3">
-                 {user && (
-                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                     <span>Signed in as {user.email}</span>
-                   </div>
-                 )}
-                 <DropdownMenu>
-                   <DropdownMenuTrigger asChild>
-                     <Button variant="ghost" size="icon" className="rounded-full">
-                       <Avatar className="h-8 w-8">
-                         <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-sm">
-                           {user?.email?.charAt(0).toUpperCase() || 'U'}
-                         </AvatarFallback>
-                       </Avatar>
-                     </Button>
-                   </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem asChild>
-                        <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
-                          <User className="h-4 w-4" />
-                          <span>Edit Profile</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
-                        <LogOut className="h-4 w-4" />
-                        <span>Sign Out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                 </DropdownMenu>
-               </div>
+              </div>
+              <NavMenu userEmail={user?.email} onSignOut={handleSignOut} />
             </div>
           </div>
         </div>
