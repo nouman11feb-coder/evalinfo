@@ -6,9 +6,6 @@ import ChatInput from './chat/ChatInput';
 import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Check, X, Edit2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import NavMenu from './NavMenu';
 
 interface Message {
@@ -420,63 +417,28 @@ useEffect(() => {
         <div className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto mobile-padding">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={handleToggleMobileMenu}
-                  className="mobile-touch-target flex items-center justify-center rounded-lg hover:bg-muted/50 md:hidden"
-                  aria-label="Toggle menu"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-                <div className="flex items-center gap-2">
-                  {isEditingTitle ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        ref={titleInputRef}
-                        value={tempTitle}
-                        onChange={(e) => setTempTitle(e.target.value)}
-                        onKeyDown={handleTitleKeyPress}
-                        onBlur={cancelEdit}
-                        className="text-lg font-semibold bg-transparent border-0 px-0 py-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
-                        placeholder="Chat name..."
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={saveTitle}
-                        className="h-6 w-6 p-0"
-                      >
-                        <Check className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={cancelEdit}
-                        className="h-6 w-6 p-0"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 group">
-                      <h2 className="text-lg font-semibold text-foreground">
-                        {currentChat?.name || 'Chat'}
-                      </h2>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={startEditingTitle}
-                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <NavMenu userEmail={user?.email} onSignOut={handleSignOut} />
+              <button 
+                onClick={handleToggleMobileMenu}
+                className="mobile-touch-target flex items-center justify-center rounded-lg hover:bg-muted/50 md:hidden"
+                aria-label="Toggle menu"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <NavMenu 
+                userEmail={user?.email} 
+                onSignOut={handleSignOut}
+                chatTitle={currentChat?.name}
+                isEditingTitle={isEditingTitle}
+                tempTitle={tempTitle}
+                onStartEditTitle={startEditingTitle}
+                onSaveTitle={saveTitle}
+                onCancelEdit={cancelEdit}
+                onTitleChange={setTempTitle}
+                onTitleKeyPress={handleTitleKeyPress}
+                titleInputRef={titleInputRef}
+              />
             </div>
           </div>
         </div>

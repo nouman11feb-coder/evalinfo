@@ -1,8 +1,10 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu, Edit2, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { useRef, useEffect } from 'react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -14,13 +16,83 @@ import {
 interface NavMenuProps {
   userEmail?: string;
   onSignOut: () => void;
+  chatTitle?: string;
+  isEditingTitle?: boolean;
+  tempTitle?: string;
+  onStartEditTitle?: () => void;
+  onSaveTitle?: () => void;
+  onCancelEdit?: () => void;
+  onTitleChange?: (value: string) => void;
+  onTitleKeyPress?: (e: React.KeyboardEvent) => void;
+  titleInputRef?: React.RefObject<HTMLInputElement>;
 }
 
-const NavMenu = ({ userEmail, onSignOut }: NavMenuProps) => {
+const NavMenu = ({ 
+  userEmail, 
+  onSignOut,
+  chatTitle,
+  isEditingTitle,
+  tempTitle,
+  onStartEditTitle,
+  onSaveTitle,
+  onCancelEdit,
+  onTitleChange,
+  onTitleKeyPress,
+  titleInputRef
+}: NavMenuProps) => {
   return (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
+    <div className="flex items-center gap-4">
+      {/* Chat Title */}
+      <div className="flex items-center gap-2">
+        {isEditingTitle ? (
+          <div className="flex items-center gap-2">
+            <Input
+              ref={titleInputRef}
+              value={tempTitle}
+              onChange={(e) => onTitleChange?.(e.target.value)}
+              onKeyDown={onTitleKeyPress}
+              onBlur={onCancelEdit}
+              className="text-lg font-semibold bg-transparent border-0 px-0 py-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Chat name..."
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onSaveTitle}
+              className="h-6 w-6 p-0"
+            >
+              <Check className="h-3 w-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onCancelEdit}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 group">
+            <h2 className="text-lg font-semibold text-foreground">
+              {chatTitle || 'Chat'}
+            </h2>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onStartEditTitle}
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Edit2 className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* User Menu */}
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
           <NavigationMenuTrigger className="gap-2">
             <Avatar className="h-7 w-7">
               <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-500 text-white font-semibold text-xs">
@@ -56,9 +128,10 @@ const NavMenu = ({ userEmail, onSignOut }: NavMenuProps) => {
               </div>
             </div>
           </NavigationMenuContent>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    </div>
   );
 };
 
