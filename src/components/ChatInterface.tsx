@@ -456,8 +456,6 @@ useEffect(() => {
                 onTitleChange={setTempTitle}
                 onTitleKeyPress={handleTitleKeyPress}
                 titleInputRef={titleInputRef}
-                chats={chats}
-                onSearchResultSelect={handleSearchResultSelect}
               />
             </div>
           </div>
