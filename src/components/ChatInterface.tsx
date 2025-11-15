@@ -42,7 +42,7 @@ interface Chat {
 
 const ChatInterface = () => {
   const { user, signOut } = useAuth();
-  const webhookUrl = "https://n8n4.evalinfo.com/webhook-test/2130c7ea-45ea-4ab0-8408-97078c4f26ed";
+  const webhookUrl = "https://n8n4.evalinfo.com/webhook/2130c7ea-45ea-4ab0-8408-97078c4f26ed";
   
   const [chats, setChats] = useState<Chat[]>([
     {
@@ -82,12 +82,12 @@ useEffect(() => {
 
 // Update document title for basic SEO
 useEffect(() => {
-  document.title = "intelliscan";
+  document.title = "Eval info Ai";
 }, []);
 
 // Load chats from localStorage
 useEffect(() => {
-  const savedChats = localStorage.getItem('intelliscan-chats');
+  const savedChats = localStorage.getItem('eval-info-ai-chats');
   if (savedChats) {
     try {
       const parsed = JSON.parse(savedChats);
@@ -107,7 +107,7 @@ useEffect(() => {
 
 // Save chats to localStorage
 useEffect(() => {
-  localStorage.setItem('intelliscan-chats', JSON.stringify(chats));
+  localStorage.setItem('eval-info-ai-chats', JSON.stringify(chats));
 }, [chats]);
 
   const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }, document?: { url: string; filename: string; size: number; mimeType: string }, voice?: { url: string; filename: string; size: number; duration: number }) => {
