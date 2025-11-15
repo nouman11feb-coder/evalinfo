@@ -4,12 +4,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useState, useRef, useEffect } from 'react';
+import SearchMessages from '@/components/SearchMessages';
 
 interface Chat {
   id: string;
   name: string;
   lastMessage: string;
   timestamp: Date;
+  messages?: any[];
 }
 
 interface ChatHistoryProps {
@@ -22,6 +24,7 @@ interface ChatHistoryProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onToggleMobileMenu?: () => void;
+  onSearchResultSelect?: (chatId: string, messageId: string) => void;
 }
 
 const ChatHistory = ({ 
@@ -33,7 +36,8 @@ const ChatHistory = ({
   onRenameChat,
   isCollapsed,
   onToggleCollapse,
-  onToggleMobileMenu
+  onToggleMobileMenu,
+  onSearchResultSelect
 }: ChatHistoryProps) => {
   const isMobile = useIsMobile();
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
@@ -120,6 +124,16 @@ const ChatHistory = ({
               <Plus className="h-4 w-4 mr-2" />
               New Chat
             </Button>
+            
+            {/* Search Messages */}
+            {chats.length > 0 && onSearchResultSelect && (
+              <div className="mt-4">
+                <SearchMessages 
+                  chats={chats.filter(chat => chat.messages && chat.messages.length > 0) as any} 
+                  onSelectResult={onSearchResultSelect}
+                />
+              </div>
+            )}
           </>
         )}
         

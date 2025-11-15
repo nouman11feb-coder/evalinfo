@@ -4,7 +4,6 @@ import { ThemeToggle } from './ThemeToggle';
 import { LogOut, User, Menu, Edit2, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import SearchMessages from './SearchMessages';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,12 +11,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-
-interface Chat {
-  id: string;
-  name: string;
-  messages: any[];
-}
 
 interface NavMenuProps {
   userEmail?: string;
@@ -31,8 +24,6 @@ interface NavMenuProps {
   onTitleChange?: (value: string) => void;
   onTitleKeyPress?: (e: React.KeyboardEvent) => void;
   titleInputRef?: React.RefObject<HTMLInputElement>;
-  chats?: Chat[];
-  onSearchResultSelect?: (chatId: string, messageId: string) => void;
 }
 
 const NavMenu = ({ 
@@ -46,9 +37,7 @@ const NavMenu = ({
   onCancelEdit,
   onTitleChange,
   onTitleKeyPress,
-  titleInputRef,
-  chats = [],
-  onSearchResultSelect
+  titleInputRef
 }: NavMenuProps) => {
   return (
     <div className="flex items-center gap-2">
@@ -98,14 +87,6 @@ const NavMenu = ({
           </div>
         )}
       </div>
-
-      {/* Search */}
-      {chats.length > 0 && onSearchResultSelect && (
-        <SearchMessages 
-          chats={chats} 
-          onSelectResult={onSearchResultSelect}
-        />
-      )}
 
       {/* User Menu */}
       <NavigationMenu>
