@@ -7,6 +7,7 @@ import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import NavMenu from './NavMenu';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -137,16 +138,30 @@ useEffect(() => {
 
     setIsLoading(true);
 
-    try {
-      console.log("Sending message to webhook:", webhookUrl);
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    const INITIAL_DELAY = 1000; // 1 second
+    let lastError: any = null;
 
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
+    const sendWithRetry = async (attempt: number): Promise<Response> => {
+      try {
+        console.log(`Attempt ${attempt}/${MAX_RETRIES}: Sending message to webhook:`, webhookUrl);
+        
+        if (attempt > 1) {
+          toast.info(`Retrying... (Attempt ${attempt}/${MAX_RETRIES})`);
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        const response = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
           message: inputValue || (image ? `Image: ${image.filename}` : '') || (document ? `Document: ${document.filename}` : '') || (voice ? `Voice message` : ''),
           timestamp: new Date().toISOString(),
           sender: 'user',
@@ -177,6 +192,37 @@ useEffect(() => {
           }),
         }),
       });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`Webhook returned status ${response.status}: ${response.statusText}`);
+        }
+
+        return response;
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Attempt ${attempt} failed:`, error);
+
+        // Don't retry on abort (timeout)
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out. Please check your connection and try again.');
+        }
+
+        // Retry on network errors
+        if (attempt < MAX_RETRIES) {
+          const delay = INITIAL_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(`Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return sendWithRetry(attempt + 1);
+        }
+
+        throw error;
+      }
+    };
+
+    try {
+      const response = await sendWithRetry(1);
 
       const extractText = (payload: any): string => {
         if (payload == null) return '';
@@ -256,13 +302,43 @@ useEffect(() => {
       
       setIsLoading(false);
 
-    } catch (error) {
-      console.error("Error sending to webhook:", error);
+    } catch (error: any) {
+      console.error("Error sending to webhook after all retries:", error);
       setIsLoading(false);
+      
+      // Determine user-friendly error message
+      let errorMessage = "Sorry, I couldn't process your message. ";
+      let errorDetails = "";
+
+      if (error.message?.includes('timed out')) {
+        errorMessage += "The request timed out.";
+        errorDetails = "The server took too long to respond. Please try again.";
+        toast.error("Request timed out", {
+          description: "The server is taking too long to respond. Please try again."
+        });
+      } else if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        errorMessage += "Unable to connect to the server.";
+        errorDetails = "Please check your internet connection and ensure the webhook URL is correct.";
+        toast.error("Connection failed", {
+          description: "Unable to reach the server. Please check your connection."
+        });
+      } else if (error.message?.includes('status')) {
+        errorMessage += "The server returned an error.";
+        errorDetails = error.message;
+        toast.error("Server error", {
+          description: error.message
+        });
+      } else {
+        errorMessage += "An unexpected error occurred.";
+        errorDetails = error.message || "Please try again later.";
+        toast.error("Error", {
+          description: "An unexpected error occurred. Please try again."
+        });
+      }
       
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Sorry, there was an error sending your message to the webhook. Please try again.",
+        text: `${errorMessage}\n\n${errorDetails}`,
         sender: 'assistant',
         timestamp: new Date(),
       };
