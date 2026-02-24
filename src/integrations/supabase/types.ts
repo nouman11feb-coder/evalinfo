@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          document_data: Json | null
+          id: string
+          image_data: Json | null
+          sender: string
+          text: string
+          voice_data: Json | null
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          document_data?: Json | null
+          id?: string
+          image_data?: Json | null
+          sender: string
+          text?: string
+          voice_data?: Json | null
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          document_data?: Json | null
+          id?: string
+          image_data?: Json | null
+          sender?: string
+          text?: string
+          voice_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
