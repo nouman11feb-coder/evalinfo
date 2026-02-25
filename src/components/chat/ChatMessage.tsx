@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Download, ExternalLink } from 'lucide-react';
 import { getDocumentIcon } from '@/services/documentUpload';
-
+import ReactMarkdown from 'react-markdown';
 interface Message {
   id: string;
   text: string;
@@ -31,9 +31,37 @@ interface ChatMessageProps {
   message: Message;
 }
 
-// Simple bold renderer: turns **text** into <strong>text</strong>
-const renderBold = (text: string): React.ReactNode => {
-  if (!text || !text.includes("**")) return text;
+// Markdown renderer for assistant, simple bold for user
+const renderMessageText = (text: string, sender: 'user' | 'assistant') => {
+  if (sender === 'assistant') {
+    return (
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+          li: ({ children }) => <li className="mb-1">{children}</li>,
+          code: ({ children, className }) => {
+            const isInline = !className;
+            return isInline
+              ? <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
+              : <code className="block bg-muted p-3 rounded-lg text-sm font-mono overflow-x-auto my-2">{children}</code>;
+          },
+          pre: ({ children }) => <pre className="overflow-x-auto">{children}</pre>,
+          h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base font-bold mb-1">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+          a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">{children}</a>,
+          blockquote: ({ children }) => <blockquote className="border-l-2 border-primary/30 pl-3 italic my-2">{children}</blockquote>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
+  }
+  // User messages: simple bold
+  if (!text.includes("**")) return text;
   const parts = text.split("**");
   return parts.map((part, idx) =>
     idx % 2 === 1 ? <strong key={idx}>{part}</strong> : <span key={idx}>{part}</span>
@@ -190,10 +218,10 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               </div>
             )}
             {message.text && (
-              <div className={`mobile-text leading-relaxed whitespace-pre-wrap ${
-                message.sender === 'user' ? 'text-white' : 'text-foreground'
+              <div className={`mobile-text leading-relaxed ${
+                message.sender === 'user' ? 'text-white whitespace-pre-wrap' : 'text-foreground prose-sm max-w-none'
               }`}>
-                {renderBold(message.text)}
+                {renderMessageText(message.text, message.sender)}
               </div>
             )}
           </div>

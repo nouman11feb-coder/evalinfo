@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -119,7 +120,7 @@ const Auth = () => {
               <MessageSquare className="h-6 w-6 text-white" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold">Intelliscan AI</CardTitle>
+              <CardTitle className="text-2xl font-bold">Eval Info AI</CardTitle>
             </div>
           </div>
           <CardDescription>
@@ -176,6 +177,11 @@ const Auth = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
+                </div>
+                <div className="flex justify-end">
+                  <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    Forgot password?
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing in...' : 'Sign In'}
