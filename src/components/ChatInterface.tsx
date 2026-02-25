@@ -71,24 +71,47 @@ const ChatInterface = () => {
     setIsLoading(true);
 
     try {
-      // Build conversation history for AI
-      const aiMessages = messages
-        .filter(m => m.text)
-        .map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }));
-      aiMessages.push({ role: 'user', content: inputValue || messageText });
+      const isImageGen = inputValue.trim().toLowerCase().startsWith('/imagine ');
+      
+      if (isImageGen) {
+        const imagePrompt = inputValue.trim().substring(9);
+        const { data, error } = await supabase.functions.invoke('chat', {
+          body: { messages: [{ prompt: imagePrompt }], action: 'generate-image' },
+        });
 
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { messages: aiMessages, action: 'chat' },
-      });
+        if (error) throw error;
 
-      if (error) throw error;
+        const replyText = data?.reply || 'Here is your generated image:';
+        const imageUrl = data?.image;
 
-      const replyText = data?.reply || 'No response received.';
+        if (imageUrl) {
+          await addMessage(activeChat, {
+            text: replyText,
+            sender: 'assistant',
+            image: { url: imageUrl, filename: 'generated-image.png', size: 0 },
+          });
+        } else {
+          await addMessage(activeChat, {
+            text: replyText || 'Image generation did not return an image.',
+            sender: 'assistant',
+          });
+        }
+      } else {
+        // Build conversation history for AI
+        const aiMessages = messages
+          .filter(m => m.text)
+          .map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }));
+        aiMessages.push({ role: 'user', content: inputValue || messageText });
 
-      await addMessage(activeChat, {
-        text: replyText,
-        sender: 'assistant',
-      });
+        const { data, error } = await supabase.functions.invoke('chat', {
+          body: { messages: aiMessages, action: 'chat' },
+        });
+
+        if (error) throw error;
+
+        const replyText = data?.reply || 'No response received.';
+        await addMessage(activeChat, { text: replyText, sender: 'assistant' });
+      }
     } catch (error: any) {
       console.error('AI error:', error);
       const errorText = error?.message || 'Something went wrong. Please try again.';
