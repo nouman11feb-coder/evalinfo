@@ -1,67 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useChatDB, Message } from '@/hooks/useChatDB';
+import { supabase } from '@/integrations/supabase/client';
 import ChatHistory from './chat/ChatHistory';
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
-import LoadingMessage from './chat/LoadingMessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import NavMenu from './NavMenu';
 import { toast } from 'sonner';
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'assistant';
-  timestamp: Date;
-  image?: {
-    url: string;
-    filename: string;
-    size: number;
-  };
-  document?: {
-    url: string;
-    filename: string;
-    size: number;
-    mimeType: string;
-  };
-  voice?: {
-    url: string;
-    filename: string;
-    size: number;
-    duration: number;
-  };
-}
-
-interface Chat {
-  id: string;
-  name: string;
-  messages: Message[];
-  lastMessage: string;
-  timestamp: Date;
-}
-
 const ChatInterface = () => {
   const { user, signOut } = useAuth();
-  const webhookUrl = "https://n8n4.evalinfo.com/webhook/2130c7ea-45ea-4ab0-8408-97078c4f26ed";
-  
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      name: 'Chat 1',
-      messages: [
-        {
-          id: '1',
-          text: "How I can help you today? I'm a smart genius assistant",
-          sender: 'assistant',
-          timestamp: new Date(),
-        },
-      ],
-      lastMessage: "How I can help you today? I'm a smart genius assistant",
-      timestamp: new Date(),
-    },
-  ]);
-  const [activeChat, setActiveChat] = useState('1');
+  const { chats, loading: chatsLoading, addMessage, createChat, deleteChat, renameChat } = useChatDB();
+
+  const [activeChat, setActiveChat] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -70,6 +23,13 @@ const ChatInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  // Set active chat when chats load
+  useEffect(() => {
+    if (chats.length > 0 && !activeChat) {
+      setActiveChat(chats[0].id);
+    }
+  }, [chats, activeChat]);
+
   const currentChat = chats.find(chat => chat.id === activeChat);
   const messages = currentChat?.messages || [];
 
@@ -77,441 +37,199 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-useEffect(() => {
-  scrollToBottom();
-}, [messages]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
 
-// Update document title for basic SEO
-useEffect(() => {
-  document.title = "Eval info Ai";
-}, []);
+  useEffect(() => {
+    document.title = "Eval info Ai";
+  }, []);
 
-// Load chats from localStorage
-useEffect(() => {
-  const savedChats = localStorage.getItem('eval-info-ai-chats');
-  if (savedChats) {
+  const handleSendMessage = async (
+    inputValue: string,
+    image?: { url: string; filename: string; size: number },
+    document?: { url: string; filename: string; size: number; mimeType: string },
+    voice?: { url: string; filename: string; size: number; duration: number }
+  ) => {
+    if ((!inputValue.trim() && !image && !document && !voice) || isLoading || !activeChat) return;
+
+    const messageText = inputValue || (image ? `Sent an image: ${image.filename}` : '') || (document ? `Sent a document: ${document.filename}` : '') || (voice ? `Sent a voice message` : '');
+
     try {
-      const parsed = JSON.parse(savedChats);
-      setChats(parsed.map((chat: any) => ({
-        ...chat,
-        timestamp: new Date(chat.timestamp),
-        messages: chat.messages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }))
-      })));
-    } catch (error) {
-      console.error('Failed to load chats:', error);
+      // Save user message to DB
+      await addMessage(activeChat, {
+        text: messageText,
+        sender: 'user',
+        ...(image && { image }),
+        ...(document && { document }),
+        ...(voice && { voice }),
+      });
+    } catch (err) {
+      console.error('Failed to save message:', err);
+      toast.error('Failed to save message');
+      return;
     }
-  }
-}, []);
-
-// Save chats to localStorage
-useEffect(() => {
-  localStorage.setItem('eval-info-ai-chats', JSON.stringify(chats));
-}, [chats]);
-
-  const handleSendMessage = async (inputValue: string, image?: { url: string; filename: string; size: number }, document?: { url: string; filename: string; size: number; mimeType: string }, voice?: { url: string; filename: string; size: number; duration: number }) => {
-    if ((!inputValue.trim() && !image && !document && !voice) || isLoading) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue || (image ? `Sent an image: ${image.filename}` : '') || (document ? `Sent a document: ${document.filename}` : '') || (voice ? `Sent a voice message` : ''),
-      sender: 'user',
-      timestamp: new Date(),
-      ...(image && { image }),
-      ...(document && { document }),
-      ...(voice && { voice }),
-    };
-
-    // Update messages in the current chat
-    setChats(prev => prev.map(chat => 
-      chat.id === activeChat 
-        ? { 
-            ...chat, 
-            messages: [...chat.messages, newMessage],
-            lastMessage: inputValue || (image ? `📷 ${image.filename}` : '') || (document ? `📎 ${document.filename}` : '') || (voice ? `🎤 Voice message` : ''),
-            timestamp: new Date()
-          }
-        : chat
-    ));
 
     setIsLoading(true);
 
-    // Retry configuration
-    const MAX_RETRIES = 3;
-    const INITIAL_DELAY = 1000; // 1 second
-    let lastError: any = null;
+    try {
+      // Build conversation history for AI
+      const aiMessages = messages
+        .filter(m => m.text)
+        .map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }));
+      aiMessages.push({ role: 'user', content: inputValue || messageText });
 
-    const sendWithRetry = async (attempt: number): Promise<Response> => {
-      try {
-        console.log(`Attempt ${attempt}/${MAX_RETRIES}: Sending message to webhook:`, webhookUrl);
-        
-        if (attempt > 1) {
-          toast.info(`Retrying... (Attempt ${attempt}/${MAX_RETRIES})`);
-        }
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-        const response = await fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          signal: controller.signal,
-          body: JSON.stringify({
-          message: inputValue || (image ? `Image: ${image.filename}` : '') || (document ? `Document: ${document.filename}` : '') || (voice ? `Voice message` : ''),
-          timestamp: new Date().toISOString(),
-          sender: 'user',
-          chat_id: activeChat,
-          triggered_from: window.location.origin,
-          ...(image && { 
-            image: {
-              url: image.url,
-              filename: image.filename,
-              size: image.size
-            }
-          }),
-          ...(document && { 
-            document: {
-              url: document.url,
-              filename: document.filename,
-              size: document.size,
-              mimeType: document.mimeType
-            }
-          }),
-          ...(voice && { 
-            voice: {
-              url: voice.url,
-              filename: voice.filename,
-              size: voice.size,
-              duration: voice.duration
-            }
-          }),
-        }),
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { messages: aiMessages, action: 'chat' },
       });
 
-        clearTimeout(timeoutId);
+      if (error) throw error;
 
-        if (!response.ok) {
-          throw new Error(`Webhook returned status ${response.status}: ${response.statusText}`);
-        }
+      const replyText = data?.reply || 'No response received.';
 
-        return response;
-      } catch (error: any) {
-        lastError = error;
-        console.error(`Attempt ${attempt} failed:`, error);
-
-        // Don't retry on abort (timeout)
-        if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please check your connection and try again.');
-        }
-
-        // Retry on network errors
-        if (attempt < MAX_RETRIES) {
-          const delay = INITIAL_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
-          console.log(`Waiting ${delay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return sendWithRetry(attempt + 1);
-        }
-
-        throw error;
-      }
-    };
-
-    try {
-      const response = await sendWithRetry(1);
-
-      const extractText = (payload: any): string => {
-        if (payload == null) return '';
-        if (typeof payload === 'string') return payload;
-        if (typeof payload === 'number' || typeof payload === 'boolean') return String(payload);
-        // Common fields
-        const candidates = [
-          payload.output,
-          payload.text,
-          payload.message,
-          payload.reply,
-          payload.result,
-          payload.response,
-          payload.content,
-          payload.data?.output,
-          payload.data?.text,
-          payload.data?.message,
-        ].filter((v) => typeof v === 'string') as string[];
-        if (candidates.length > 0) return candidates[0];
-
-        // Arrays: find first string or object with known field
-        if (Array.isArray(payload)) {
-          for (const item of payload) {
-            const t = extractText(item);
-            if (t) return t;
-          }
-        }
-
-        // Single-key object with string value
-        const keys = Object.keys(payload);
-        if (keys.length === 1 && typeof (payload as any)[keys[0]] === 'string') {
-          return (payload as any)[keys[0]];
-        }
-
-        return '';
-      };
-
-      let replyText = '';
-      try {
-        const contentType = response.headers.get('content-type') || '';
-        console.log("Response status:", response.status);
-        console.log("Response content-type:", contentType);
-        
-        if (contentType.includes('application/json')) {
-          const data = await response.json();
-          console.log("JSON response data:", data);
-          replyText = extractText(data) || 'No content returned from webhook.';
-        } else {
-          const textData = await response.text();
-          console.log("Text response data:", textData);
-          replyText = textData || 'No content returned from webhook.';
-        }
-        console.log("Final replyText:", replyText);
-      } catch (e) {
-        console.error("Error parsing response:", e);
-        replyText = 'Received response but could not parse content.';
-      }
-
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: replyText.trim(),
+      await addMessage(activeChat, {
+        text: replyText,
         sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      // Update messages in the current chat
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChat 
-          ? { 
-              ...chat, 
-              messages: [...chat.messages, aiResponse],
-              lastMessage: replyText.trim().substring(0, 50) + (replyText.length > 50 ? '...' : ''),
-              timestamp: new Date()
-            }
-          : chat
-      ));
-      
-      setIsLoading(false);
-
+      });
     } catch (error: any) {
-      console.error("Error sending to webhook after all retries:", error);
-      setIsLoading(false);
-      
-      // Determine user-friendly error message
-      let errorMessage = "Sorry, I couldn't process your message. ";
-      let errorDetails = "";
+      console.error('AI error:', error);
+      const errorText = error?.message || 'Something went wrong. Please try again.';
+      toast.error('AI Error', { description: errorText });
 
-      if (error.message?.includes('timed out')) {
-        errorMessage += "The request timed out.";
-        errorDetails = "The server took too long to respond. Please try again.";
-        toast.error("Request timed out", {
-          description: "The server is taking too long to respond. Please try again."
-        });
-      } else if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
-        errorMessage += "Unable to connect to the server.";
-        errorDetails = "Please check your internet connection and ensure the webhook URL is correct.";
-        toast.error("Connection failed", {
-          description: "Unable to reach the server. Please check your connection."
-        });
-      } else if (error.message?.includes('status')) {
-        errorMessage += "The server returned an error.";
-        errorDetails = error.message;
-        toast.error("Server error", {
-          description: error.message
-        });
-      } else {
-        errorMessage += "An unexpected error occurred.";
-        errorDetails = error.message || "Please try again later.";
-        toast.error("Error", {
-          description: "An unexpected error occurred. Please try again."
-        });
+      await addMessage(activeChat, {
+        text: `Sorry, an error occurred: ${errorText}`,
+        sender: 'assistant',
+      });
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleNewChat = async () => {
+    const chatNumber = chats.length + 1;
+    try {
+      const newChat = await createChat(`Chat ${chatNumber}`);
+      if (newChat) setActiveChat(newChat.id);
+    } catch (err) {
+      console.error('Failed to create chat:', err);
+      toast.error('Failed to create new chat');
+    }
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    setActiveChat(chatId);
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    if (chats.length === 1) return;
+    try {
+      await deleteChat(chatId);
+      if (activeChat === chatId) {
+        const remaining = chats.filter(c => c.id !== chatId);
+        setActiveChat(remaining[0]?.id || '');
       }
-      
-      const errorResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `${errorMessage}\n\n${errorDetails}`,
-        sender: 'assistant',
-        timestamp: new Date(),
-      };
-      
-      // Update messages in the current chat
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChat 
-          ? { 
-              ...chat, 
-              messages: [...chat.messages, errorResponse],
-              lastMessage: "Error occurred",
-              timestamp: new Date()
-            }
-          : chat
-      ));
+    } catch (err) {
+      console.error('Failed to delete chat:', err);
+      toast.error('Failed to delete chat');
     }
   };
 
-const handleNewChat = () => {
-  const chatNumber = chats.length + 1;
-  const newChat: Chat = {
-    id: Date.now().toString(),
-    name: `Chat ${chatNumber}`,
-    messages: [
-      {
-        id: Date.now().toString(),
-        text: "How I can help you today? I'm a smart genius assistant",
-        sender: 'assistant',
-        timestamp: new Date(),
-      },
-    ],
-    lastMessage: "How I can help you today? I'm a smart genius assistant",
-    timestamp: new Date(),
-  };
-  
-  setChats(prev => [...prev, newChat]);
-  setActiveChat(newChat.id);
-};
-
-const handleSelectChat = (chatId: string) => {
-  setActiveChat(chatId);
-};
-
-const handleDeleteChat = (chatId: string) => {
-  if (chats.length === 1) return; // Don't delete the last chat
-  
-  setChats(prev => prev.filter(chat => chat.id !== chatId));
-  
-  if (activeChat === chatId) {
-    const remainingChats = chats.filter(chat => chat.id !== chatId);
-    setActiveChat(remainingChats[0]?.id || '');
-  }
-};
-
-const handleToggleSidebar = () => {
-  setSidebarCollapsed(!sidebarCollapsed);
-};
-
-const handleToggleMobileMenu = () => {
-  setMobileMenuOpen(!mobileMenuOpen);
-};
-
-const handleRenameChat = (chatId: string, newName: string) => {
-  if (!newName.trim()) return;
-  
-  setChats(prev => prev.map(chat => 
-    chat.id === chatId 
-      ? { ...chat, name: newName.trim() }
-      : chat
-  ));
-};
-
-const startEditingTitle = () => {
-  setTempTitle(currentChat?.name || '');
-  setIsEditingTitle(true);
-  // Focus input after state update
-  setTimeout(() => titleInputRef.current?.focus(), 0);
-};
-
-const saveTitle = () => {
-  if (tempTitle.trim() && currentChat) {
-    handleRenameChat(currentChat.id, tempTitle.trim());
-  }
-  setIsEditingTitle(false);
-  setTempTitle('');
-};
-
-const cancelEdit = () => {
-  setIsEditingTitle(false);
-  setTempTitle('');
-};
-
-const handleTitleKeyPress = (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter') {
-    saveTitle();
-  } else if (e.key === 'Escape') {
-    cancelEdit();
-  }
-};
-
-const handleSignOut = async () => {
-  await signOut();
-};
-
-const handleSearchResultSelect = (chatId: string, messageId: string) => {
-  setActiveChat(chatId);
-  setMobileMenuOpen(false);
-  
-  // Scroll to the message after a brief delay to ensure chat is loaded
-  setTimeout(() => {
-    const messageElement = document.getElementById(`message-${messageId}`);
-    if (messageElement) {
-      messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Add a highlight effect
-      messageElement.classList.add('ring-2', 'ring-primary', 'rounded-lg');
-      setTimeout(() => {
-        messageElement.classList.remove('ring-2', 'ring-primary', 'rounded-lg');
-      }, 2000);
+  const handleRenameChat = async (chatId: string, newName: string) => {
+    if (!newName.trim()) return;
+    try {
+      await renameChat(chatId, newName.trim());
+    } catch (err) {
+      console.error('Failed to rename chat:', err);
     }
-  }, 100);
-};
+  };
 
-// Focus input when editing starts
-useEffect(() => {
-  if (isEditingTitle && titleInputRef.current) {
-    titleInputRef.current.focus();
-    titleInputRef.current.select();
+  const handleToggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
+  const handleToggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
+  const startEditingTitle = () => {
+    setTempTitle(currentChat?.name || '');
+    setIsEditingTitle(true);
+    setTimeout(() => titleInputRef.current?.focus(), 0);
+  };
+
+  const saveTitle = () => {
+    if (tempTitle.trim() && currentChat) {
+      handleRenameChat(currentChat.id, tempTitle.trim());
+    }
+    setIsEditingTitle(false);
+    setTempTitle('');
+  };
+
+  const cancelEdit = () => {
+    setIsEditingTitle(false);
+    setTempTitle('');
+  };
+
+  const handleTitleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveTitle();
+    else if (e.key === 'Escape') cancelEdit();
+  };
+
+  const handleSignOut = async () => { await signOut(); };
+
+  const handleSearchResultSelect = (chatId: string, messageId: string) => {
+    setActiveChat(chatId);
+    setMobileMenuOpen(false);
+    setTimeout(() => {
+      const el = document.getElementById(`message-${messageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-primary', 'rounded-lg');
+        setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'rounded-lg'), 2000);
+      }
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  if (chatsLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
-}, [isEditingTitle]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Mobile overlay */}
       {mobileMenuOpen && (
-        <div 
-          className="mobile-sidebar-overlay"
-          onClick={handleToggleMobileMenu}
-        />
+        <div className="mobile-sidebar-overlay" onClick={handleToggleMobileMenu} />
       )}
-      
-      {/* Chat History Sidebar */}
+
       <div className={`mobile-sidebar ${!mobileMenuOpen ? 'mobile-sidebar-hidden' : ''}`}>
         <ChatHistory
           chats={chats.map(chat => ({
             id: chat.id,
             name: chat.name,
             lastMessage: chat.lastMessage,
-            timestamp: chat.timestamp
+            timestamp: chat.timestamp,
+            messages: chat.messages,
           }))}
           activeChat={activeChat}
-          onSelectChat={(chatId) => {
-            handleSelectChat(chatId);
-            setMobileMenuOpen(false); // Close mobile menu on chat select
-          }}
-          onNewChat={() => {
-            handleNewChat();
-            setMobileMenuOpen(false); // Close mobile menu on new chat
-          }}
+          onSelectChat={(chatId) => { handleSelectChat(chatId); setMobileMenuOpen(false); }}
+          onNewChat={() => { handleNewChat(); setMobileMenuOpen(false); }}
           onDeleteChat={handleDeleteChat}
           onRenameChat={handleRenameChat}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
           onToggleMobileMenu={handleToggleMobileMenu}
+          onSearchResultSelect={handleSearchResultSelect}
         />
       </div>
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <div className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto mobile-padding">
             <div className="flex items-center justify-between">
-              <button 
+              <button
                 onClick={handleToggleMobileMenu}
                 className="mobile-touch-target flex items-center justify-center rounded-lg hover:bg-muted/50 md:hidden"
                 aria-label="Toggle menu"
@@ -520,8 +238,8 @@ useEffect(() => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <NavMenu 
-                userEmail={user?.email} 
+              <NavMenu
+                userEmail={user?.email}
                 onSignOut={handleSignOut}
                 chatTitle={currentChat?.name}
                 isEditingTitle={isEditingTitle}
@@ -536,23 +254,20 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        
-        {/* Messages */}
+
         <ScrollArea className="flex-1">
           <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8">
-            {/* Empty state message */}
-            {messages.length === 1 && messages[0].sender === 'assistant' && (
+            {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                 <h1 className="text-4xl md:text-5xl font-normal text-foreground text-center mb-8">
                   Ready when you are.
                 </h1>
               </div>
             )}
-            
-            {/* Chat messages */}
-            {messages.length > 1 && (
+
+            {messages.length > 0 && (
               <div className="space-y-6">
-                {messages.slice(1).map((message) => (
+                {messages.map((message) => (
                   <div key={message.id} id={`message-${message.id}`}>
                     <ChatMessage message={message} />
                   </div>
@@ -584,7 +299,6 @@ useEffect(() => {
           </div>
         </ScrollArea>
 
-        {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} messages={messages} />
       </div>
     </div>

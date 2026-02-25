@@ -317,8 +317,8 @@ const ChatInput = ({ onSendMessage, isLoading, messages }: ChatInputProps) => {
                 onKeyDown={handleKeyDown}
                 placeholder={
                   (selectedImage || selectedDocument || selectedVoice) 
-                    ? "Message Intelliscan..." 
-                    : "Message Intelliscan"
+                    ? "Message Eval info Ai..." 
+                    : "Message Eval info Ai"
                 }
                 disabled={isLoading || isUploading}
                 rows={1}
