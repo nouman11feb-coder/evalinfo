@@ -114,7 +114,7 @@ const ChatHistory = ({
               <div className="h-10 w-10 rounded-xl bg-sidebar-primary flex items-center justify-center shadow-lg">
                 <MessageSquare className="h-5 w-5 text-sidebar-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-sidebar-foreground">intelliscan</h1>
+              <h1 className="text-xl font-bold text-sidebar-foreground">Eval info Ai</h1>
             </div>
             <Button 
               onClick={onNewChat}
